@@ -3,10 +3,9 @@ pragma solidity ^0.8.9;
 
 import "@openzeppelin/contracts/utils/Counters.sol";
 import "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
-import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/token/ERC1155/extensions/ERC1155Supply.sol";
 
-contract ProvToken is ERC1155, Ownable, ERC1155Supply {
+contract ProvToken is ERC1155, ERC1155Supply {
     using Counters for Counters.Counter;
     Counters.Counter private _tokenIds;
 
@@ -14,10 +13,7 @@ contract ProvToken is ERC1155, Ownable, ERC1155Supply {
 
     constructor() ERC1155("https://api.mysite.com/tokens/{id}") {}
 
-    function setURI(string memory newuri) public onlyOwner {
-        _setURI(newuri);
-    }
-
+    // TODO: remove account so that the person sending the money can only mint
     function mint(address account, bytes memory data)
         public
         returns (uint256)
@@ -30,7 +26,6 @@ contract ProvToken is ERC1155, Ownable, ERC1155Supply {
 
     function mintBatch(address to, uint256[] memory amounts, bytes memory data)
         public
-        onlyOwner
         returns (uint256[] memory)
     {
         uint256[] memory ids = new uint256[](amounts.length);
