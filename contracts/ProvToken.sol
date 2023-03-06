@@ -13,13 +13,9 @@ contract ProvToken is ERC1155, ERC1155Supply {
 
     constructor() ERC1155("https://api.mysite.com/tokens/{id}") {}
 
-    // TODO: remove account so that the person sending the money can only mint
-    function mint(address account, bytes memory data)
-        public
-        returns (uint256)
-    {
+    function mint(bytes memory data) public returns (uint256) {
         uint256 newItemId = _tokenIds.current();
-        _mint(account, newItemId, SUPPLY_PER_ID, data);
+        _mint(msg.sender, newItemId, SUPPLY_PER_ID, data);
         _tokenIds.increment();
         return newItemId;
     }
