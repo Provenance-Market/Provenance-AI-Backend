@@ -10,18 +10,20 @@ contract ProvToken is ERC1155, Ownable, ERC1155Supply {
     using Counters for Counters.Counter;
     Counters.Counter private _tokenIds;
 
+    uint8 constant SUPPLY_PER_ID = 1;
+
     constructor() ERC1155("https://api.mysite.com/tokens/{id}") {}
 
     function setURI(string memory newuri) public onlyOwner {
         _setURI(newuri);
     }
 
-    function mint(address account, uint256 amount, bytes memory data)
+    function mint(address account, bytes memory data)
         public
         returns (uint256)
     {
         uint256 newItemId = _tokenIds.current();
-        _mint(account, newItemId, amount, data);
+        _mint(account, newItemId, SUPPLY_PER_ID, data);
         _tokenIds.increment();
         return newItemId;
     }
