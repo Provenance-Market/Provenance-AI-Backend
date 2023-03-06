@@ -11,11 +11,12 @@ contract ProvToken is ERC1155, ERC1155Supply {
 
     uint8 constant SUPPLY_PER_ID = 1;
 
-    constructor() ERC1155("https://api.mysite.com/tokens/{id}") {}
+    constructor() ERC1155() {}
 
-    function mint(bytes memory data) public returns (uint256) {
+    function mint(bytes memory data, string memory tokenURI) public returns (uint256) {
         uint256 newItemId = _tokenIds.current();
         _mint(msg.sender, newItemId, SUPPLY_PER_ID, data);
+        _setTokenURI(newItemId, tokenURI);
         _tokenIds.increment();
         return newItemId;
     }
