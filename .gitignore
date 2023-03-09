@@ -9,6 +9,10 @@ typechain
 typechain-types
 package-lock.json
 
+# Truffle
+build
+build_webpack
+
 # Hardhat files
 cache
 artifacts

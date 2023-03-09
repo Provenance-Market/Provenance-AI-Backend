@@ -1,8 +1,21 @@
 {
+  "name": "Provenance",
+  "version": "1.0.0",
+  "description": "NFT marketplace for AI-generated personalized artwork",
   "dependencies": {
+    "@openzeppelin/contracts": "^4.8.2",
     "dotenv": "^16.0.3"
   },
+  "scripts": {
+    "ganache": "ganache --chain.chainId 1337 -p 8545 -a 20 -e 10000 -m 'egg cannon figure ketchup fall issue never share online shiver chief album'"
+  },
+  "author": "Ed-Marcavage, aaronjan98",
+  "license": "MIT",
   "devDependencies": {
-    "truffle": "^5.7.9"
-  }
+    "@aaronjan98/solidity-prettier-conf": "^1.0.2",
+    "truffle": "^5.7.9",
+    "prettier": "^2.7.1",
+    "prettier-plugin-solidity": "^1.0.0-beta.24"
+  },
+  "prettier": "@aaronjan98/solidity-prettier-conf"
 }
