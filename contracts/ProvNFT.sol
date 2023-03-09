@@ -11,13 +11,19 @@ contract ProvNFT is ERC1155URIStorage, ERC1155Supply {
     Counters.Counter private _tokenIds;
 
     uint8 constant SUPPLY_PER_ID = 1;
+    uint256 constant MINT_PRICE = 0.01 ether;
 
     constructor() ERC1155('') {}
 
     function mint(
         bytes memory data,
         string memory tokenURI
-    ) public returns (uint256) {
+    ) public payable returns (uint256) {
+        require(
+            msg.value >= MINT_PRICE,
+            'Not enough ether to cover minting cost'
+        );
+
         uint256 newItemId = _tokenIds.current();
         _mint(msg.sender, newItemId, SUPPLY_PER_ID, data);
         _setURI(newItemId, tokenURI);
