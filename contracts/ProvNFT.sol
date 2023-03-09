@@ -1,12 +1,13 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.9;
 
-import '@openzeppelin/contracts/utils/Counters.sol';
 import '@openzeppelin/contracts/token/ERC1155/extensions/ERC1155URIStorage.sol';
 import '@openzeppelin/contracts/token/ERC1155/extensions/ERC1155Supply.sol';
+import '@openzeppelin/contracts/access/Ownable.sol';
+import '@openzeppelin/contracts/utils/Counters.sol';
 
 /// @custom:security-contact ProvenanceMarket.art@proton.me
-contract ProvNFT is ERC1155URIStorage, ERC1155Supply {
+contract ProvNFT is ERC1155URIStorage, ERC1155Supply, Ownable {
     using Counters for Counters.Counter;
     Counters.Counter private _tokenIds;
 
@@ -44,6 +45,14 @@ contract ProvNFT is ERC1155URIStorage, ERC1155Supply {
         }
         _mintBatch(to, ids, amounts, data);
         return ids;
+    }
+
+    function withdraw() public onlyOwner {
+        uint256 balance = address(this).balance;
+        require(balance > 0, 'Balance is 0');
+
+        (bool success, ) = payable(msg.sender).call{ value: balance }('');
+        require(success);
     }
 
     // The following functions are overrides required by Solidity.
