@@ -1,5 +1,70 @@
-# Provenace-AI-Backend
-## Novel merger of AI and Blockchain Tech 
+<h1 align="center">Provenance Back End</h1>
+<p>
+  <img alt="Version" src="https://img.shields.io/badge/version-1.0.0-blue.svg?cacheSeconds=2592000" />
+  <a href="https://github.com/Provenance-Market/Provenace-AI-Backend" target="_blank">
+    <img alt="Documentation" src="https://img.shields.io/badge/documentation-yes-brightgreen.svg" />
+  </a>
+  <a href="#" target="_blank">
+    <img alt="License: MIT" src="https://img.shields.io/badge/License-MIT-yellow.svg" />
+  </a>
+</p>
 
+> NFT marketplace for AI-generated personalized artwork
 
-![Screenshot 2023-03-03 at 8 04 05 PM](https://user-images.githubusercontent.com/114358152/222864178-b42dd6bc-58a7-4989-80b9-d7ec6e6a29f3.png)
+### 🏠 [Homepage](#)
+
+### ✨ [Demo](#)
+
+## Install
+
+```sh
+yarn
+```
+
+## Set Up Project Locally
+
+1. Run ganache blockchain
+
+```sh
+yarn run ganache
+```
+
+2. Add the network to MetaMask (only needed for the front end)
+
+- you'll need the following info to add a network to MetaMask:
+  the RPC URL is `http://127.0.0.1:8545`,
+  the chain ID is `1337`, and the currency symbol is `ETH`.
+
+3. Import the ganache accounts into MetaMask to interact with wallets on the front end
+
+4. Deploy NFT contract
+
+```sh
+npx truffle migrate --network ganache
+```
+
+5. Run this script to save the NFT ABI to the front end. The front and backend
+   repos have to be adjacent to each other or else you'll have to change the
+   file path, '../Provenance-AI-Frontend/src/abis/ProvNFT.json', in `scripts/saveABI.js`
+
+```sh
+node scripts/saveABI.js
+```
+
+## Run tests
+
+```sh
+npx truffle test
+```
+
+## Authors
+
+👤 [**Eddie**](https://github.com/Ed-Marcavage), [**AJ**](https://github.com/aaronjan98)
+
+## 🤝 Contributing
+
+Contributions, issues and feature requests are welcome!<br />Feel free to check [issues page](https://github.com/Provenance-Market/Provenace-AI-Backend/issues).
+
+## Show your support
+
+Give a ⭐️ if this project helped you!

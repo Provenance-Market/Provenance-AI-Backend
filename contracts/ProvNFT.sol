@@ -12,7 +12,7 @@ contract ProvNFT is ERC1155URIStorage, ERC1155Supply, Ownable {
     Counters.Counter private _tokenIds;
 
     uint8 constant SUPPLY_PER_ID = 1;
-    uint256 constant MINT_PRICE = 0.01 ether;
+    uint256 public mintPrice = 0.01 ether;
 
     constructor() ERC1155('') {}
 
@@ -20,10 +20,7 @@ contract ProvNFT is ERC1155URIStorage, ERC1155Supply, Ownable {
         bytes memory data,
         string memory tokenURI
     ) public payable returns (uint256) {
-        require(
-            msg.value >= MINT_PRICE,
-            'Not enough ether to cover minting cost'
-        );
+        require(msg.value == mintPrice, 'Invalid ether amount for minting');
 
         uint256 newItemId = _tokenIds.current();
         _mint(msg.sender, newItemId, SUPPLY_PER_ID, data);
