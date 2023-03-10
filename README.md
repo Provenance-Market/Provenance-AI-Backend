@@ -21,7 +21,7 @@
 yarn
 ```
 
-## Set Up Project Locally
+## Run Project Locally
 
 1. Run ganache blockchain
 
@@ -29,13 +29,14 @@ yarn
 yarn run ganache
 ```
 
-2. Add the network to MetaMask (only needed for the front end)
+2. Add network to MetaMask or whichever wallet to connect the [front-end site](https://github.com/Provenance-Market/Provenace-AI-Frontend)
 
-- you'll need the following info to add a network to MetaMask:
-  the RPC URL is `http://127.0.0.1:8545`,
-  the chain ID is `1337`, and the currency symbol is `ETH`.
+- you'll need the following info to add the network:
+  - RPC URL: `http://127.0.0.1:8545`
+  - chain ID: `1337`
+  - currency symbol: `ETH`
 
-3. Import the ganache accounts into MetaMask to interact with wallets on the front end
+3. Import the ganache accounts into MetaMask to interact with them on the front end
 
 4. Deploy NFT contract
 
@@ -45,7 +46,7 @@ npx truffle migrate --network ganache
 
 5. Run this script to save the NFT ABI to the front end. The front and backend
    repos have to be adjacent to each other or else you'll have to change the
-   file path, '../Provenance-AI-Frontend/src/abis/ProvNFT.json', in `scripts/saveABI.js`
+   file path `../Provenance-AI-Frontend/src/abis/ProvNFT.json` in `scripts/saveABI.js`
 
 ```sh
 node scripts/saveABI.js
