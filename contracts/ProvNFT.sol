@@ -5,16 +5,20 @@ import '@openzeppelin/contracts/token/ERC1155/extensions/ERC1155URIStorage.sol';
 import '@openzeppelin/contracts/token/ERC1155/extensions/ERC1155Supply.sol';
 import '@openzeppelin/contracts/access/Ownable.sol';
 import '@openzeppelin/contracts/utils/Counters.sol';
+import '@openzeppelin/contracts/finance/PaymentSplitter.sol';
 
 /// @custom:security-contact ProvenanceMarket.art@proton.me
-contract ProvNFT is ERC1155URIStorage, ERC1155Supply, Ownable {
+contract ProvNFT is ERC1155URIStorage, ERC1155Supply, Ownable, PaymentSplitter {
     using Counters for Counters.Counter;
     Counters.Counter private _tokenIds;
 
     uint8 constant SUPPLY_PER_ID = 1;
     uint256 public mintPrice = 0.01 ether;
 
-    constructor() ERC1155('') {}
+    constructor(
+        address[] memory _payees,
+        uint256[] memory _shares
+    ) ERC1155('') PaymentSplitter(_payees, _shares) {}
 
     function mint(string memory metadataURI) public payable returns (uint256) {
         require(msg.value == mintPrice, 'Invalid ether amount for minting');
@@ -69,7 +73,7 @@ contract ProvNFT is ERC1155URIStorage, ERC1155Supply, Ownable {
         return ids;
     }
 
-    function withdraw() public onlyOwner {
+    function withdraw() external onlyOwner {
         uint256 balance = address(this).balance;
         require(balance > 0, 'Balance is 0');
 
