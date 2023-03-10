@@ -26,6 +26,13 @@ contract ProvNFT is ERC1155URIStorage, ERC1155Supply, Ownable {
         return newItemId;
     }
 
+    function imageGenerationPayment(uint256 cost) public payable {
+        require(
+            msg.value == cost,
+            'Insufficient payment amount for AI image generation'
+        );
+    }
+
     function mintBatch(
         uint256 mintAmount,
         string[] memory metadataURIs
