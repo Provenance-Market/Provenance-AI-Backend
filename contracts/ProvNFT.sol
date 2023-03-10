@@ -16,31 +16,49 @@ contract ProvNFT is ERC1155URIStorage, ERC1155Supply, Ownable {
 
     constructor() ERC1155('') {}
 
-    function mint(
-        bytes memory data,
-        string memory tokenURI
-    ) public payable returns (uint256) {
+    function mint(string memory metadataURI) public payable returns (uint256) {
         require(msg.value == mintPrice, 'Invalid ether amount for minting');
 
         uint256 newItemId = _tokenIds.current();
-        _mint(msg.sender, newItemId, SUPPLY_PER_ID, data);
-        _setURI(newItemId, tokenURI);
+        _mint(msg.sender, newItemId, SUPPLY_PER_ID, '');
+        _setURI(newItemId, metadataURI);
         _tokenIds.increment();
         return newItemId;
     }
 
     function mintBatch(
-        address to,
-        uint256[] memory amounts,
-        bytes memory data
-    ) public returns (uint256[] memory) {
-        uint256[] memory ids = new uint256[](amounts.length);
-        for (uint i = 0; i < amounts.length; i++) {
+        uint256 mintAmount,
+        string[] memory metadataURIs
+    ) public payable returns (uint256[] memory) {
+        require(
+            metadataURIs.length == mintAmount,
+            'metadataURIs array length does not match the NFT mint amount'
+        );
+        require(
+            msg.value >= mintPrice * mintAmount,
+            'Invalid ether amount for minting'
+        );
+
+        uint256[] memory ids = new uint256[](mintAmount);
+        for (uint i = 0; i < mintAmount; i++) {
             uint256 newItemId = _tokenIds.current();
             ids[i] = newItemId;
             _tokenIds.increment();
+
+            _setURI(newItemId, metadataURIs[i]);
         }
-        _mintBatch(to, ids, amounts, data);
+
+        // Create array of `mintAmount` elements for unique batch mints
+        uint256[] memory amounts = new uint256[](mintAmount);
+        bytes memory amountsData = abi.encodePacked(
+            bytes32(uint256(1)),
+            bytes32(mintAmount - 1)
+        );
+        assembly {
+            mstore(add(amounts, 32), mload(add(amountsData, 32)))
+        }
+
+        _mintBatch(msg.sender, ids, amounts, '');
         return ids;
     }
 
