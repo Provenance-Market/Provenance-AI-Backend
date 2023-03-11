@@ -1,4 +1,4 @@
-let NFT = artifacts.require('ProvNFT')
+const NFT = artifacts.require('ProvNFT')
 
 module.exports = function (deployer) {
   deployer.deploy(
