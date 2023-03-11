@@ -6,6 +6,7 @@ import '@openzeppelin/contracts/token/ERC1155/extensions/ERC1155Supply.sol';
 import '@openzeppelin/contracts/access/Ownable.sol';
 import '@openzeppelin/contracts/utils/Counters.sol';
 import '@openzeppelin/contracts/finance/PaymentSplitter.sol';
+import '@ganache/console.log/console.sol';
 
 /// @custom:security-contact ProvenanceMarket.art@proton.me
 contract ProvNFT is ERC1155URIStorage, ERC1155Supply, Ownable, PaymentSplitter {
@@ -54,9 +55,8 @@ contract ProvNFT is ERC1155URIStorage, ERC1155Supply, Ownable, PaymentSplitter {
         for (uint i = 0; i < mintAmount; i++) {
             uint256 newItemId = _tokenIds.current();
             ids[i] = newItemId;
-            _tokenIds.increment();
-
             _setURI(newItemId, metadataURIs[i]);
+            _tokenIds.increment();
         }
 
         // Create array of `mintAmount` elements for unique batch mints
