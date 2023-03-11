@@ -60,7 +60,7 @@ npx truffle test
 
 ## Authors
 
-👤 [**Eddie**](https://github.com/Ed-Marcavage), [**AJ**](https://github.com/aaronjan98)
+👤 [**Eddie**](https://github.com/Ed-Marcavage), [**AJ**](https://github.com/aaronjan98), [**Jake**](https://github.com/Rohith09)
 
 ## 🤝 Contributing
 
