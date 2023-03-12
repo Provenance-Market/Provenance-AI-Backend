@@ -73,6 +73,10 @@ contract ProvNFT is ERC1155URIStorage, ERC1155Supply, Ownable, PaymentSplitter {
         return ids;
     }
 
+    function getTotalSupply() public view returns (uint256) {
+        return _tokenIds.current();
+    }
+
     function withdraw() external onlyOwner {
         uint256 balance = address(this).balance;
         require(balance > 0, 'Balance is 0');
