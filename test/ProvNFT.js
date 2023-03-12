@@ -31,18 +31,19 @@ contract('ProvNFT', accounts => {
 
   describe('Minting', () => {
     let idCounter = -1
+    let result
 
     describe('Success', async () => {
       beforeEach(async function () {
         this.contract = await ProvNFT.new([payee1, payee2], [50, 50])
-      })
 
-      it('should allow minting of a new NFT', async function () {
-        const result = await this.contract.mint(metadataBaseURI + ++idCounter, {
+        result = await this.contract.mint(metadataBaseURI + ++idCounter, {
           value: mintingFee,
           from: owner,
         })
+      })
 
+      it('should allow minting of a new NFT & check metadata URI is set correctly', async function () {
         // NFT Transfer log
         expect(result.logs).to.have.lengthOf(2)
         expect(result.logs[0].event).to.equal('TransferSingle')
@@ -60,6 +61,19 @@ contract('ProvNFT', accounts => {
 
         const uri = await this.contract.uri(0)
         expect(uri).to.equal(metadataBaseURI + idCounter)
+      })
+
+      it('should increment the token Ids correctly', async function () {
+        result = await this.contract.mint(metadataBaseURI + ++idCounter, {
+          value: mintingFee,
+          from: owner,
+        })
+
+        expect(result.logs[0].event).to.equal('TransferSingle')
+        expect(result.logs[0].args.id.toNumber()).to.equal(1)
+        expect(result.logs[1].event).to.equal('URI')
+        expect(result.logs[1].args.id.toNumber()).to.equal(1)
+        expect(result.logs[1].args.value).to.equal(metadataBaseURI + idCounter)
       })
     })
 
@@ -101,7 +115,7 @@ contract('ProvNFT', accounts => {
         this.contract = await ProvNFT.new([payee1, payee2], [50, 50])
       })
 
-      it('should allow minting of multiple new NFTs', async function () {
+      it('should allow minting of multiple new NFTs & check metadata URIs are set correctly', async function () {
         const result = await this.contract.mintBatch(mintAmount, metadataURIs, {
           value: calculateFee(mintingFee, mintAmount),
           from: owner,
@@ -127,7 +141,7 @@ contract('ProvNFT', accounts => {
         )
         expect(result.logs[mintAmount].args.to).to.equal(owner)
 
-        // NFT URIs associated with their IDs
+        // check that NFT URIs are associated with their IDs
         for (let id = 0; id < mintAmount; id++) {
           const uri = await this.contract.uri(id)
           expect(uri).to.equal(metadataURIs[id])
