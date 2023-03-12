@@ -1,8 +1,19 @@
 const ProvNFT = artifacts.require('ProvNFT')
+const BN = require('bn.js')
+
+const toWei = etherAmount => web3.utils.toWei(etherAmount, 'ether')
+
+const calculateFee = (mintingFee, mintAmount) => {
+  const amount = new web3.utils.BN(mintAmount)
+  const fee = web3.utils.toBN(mintingFee)
+  const totalFee = fee.mul(amount)
+  return totalFee
+}
 
 contract('ProvNFT', accounts => {
   const metadataBaseURI = 'https://example.com/token_metadata/'
   const [owner, payee1, payee2] = accounts
+  const mintingFee = toWei('0.01')
 
   describe('Deployment', () => {
     it('should deploy smart contract properly', async () => {
@@ -20,87 +31,130 @@ contract('ProvNFT', accounts => {
 
   describe('Minting', () => {
     let idCounter = -1
-    before(async function () {
-      this.contract = await ProvNFT.new([payee1, payee2], [50, 50])
-    })
 
-    it('should allow minting of a new NFT', async function () {
-      const result = await this.contract.mint(metadataBaseURI + ++idCounter, {
-        value: web3.utils.toWei('0.01', 'ether'),
-        from: owner,
+    describe('Success', async () => {
+      beforeEach(async function () {
+        this.contract = await ProvNFT.new([payee1, payee2], [50, 50])
       })
 
-      expect(result.logs).to.have.lengthOf(2)
-      // NFT Transfer log
-      expect(result.logs[0].event).to.equal('TransferSingle')
-      expect(result.logs[0].args.id.toNumber()).to.equal(0)
-      expect(result.logs[0].args.from).to.equal(
-        '0x0000000000000000000000000000000000000000'
-      )
-      expect(result.logs[0].args.to).to.equal(owner)
-      expect(result.logs[0].args.value.toNumber()).to.equal(1)
-      // NFT URI event
-      expect(result.logs[1].event).to.equal('URI')
-      expect(result.logs[1].args.id.toNumber()).to.equal(0)
-      expect(result.logs[1].args.value).to.equal(metadataBaseURI + idCounter)
+      it('should allow minting of a new NFT', async function () {
+        const result = await this.contract.mint(metadataBaseURI + ++idCounter, {
+          value: mintingFee,
+          from: owner,
+        })
 
-      const uri = await this.contract.uri(0)
-      expect(uri).to.equal(metadataBaseURI + idCounter)
+        // NFT Transfer log
+        expect(result.logs).to.have.lengthOf(2)
+        expect(result.logs[0].event).to.equal('TransferSingle')
+        expect(result.logs[0].args.id.toNumber()).to.equal(0)
+        expect(result.logs[0].args.from).to.equal(
+          '0x0000000000000000000000000000000000000000'
+        )
+        expect(result.logs[0].args.to).to.equal(owner)
+        expect(result.logs[0].args.value.toNumber()).to.equal(1)
+
+        // NFT URI event
+        expect(result.logs[1].event).to.equal('URI')
+        expect(result.logs[1].args.id.toNumber()).to.equal(0)
+        expect(result.logs[1].args.value).to.equal(metadataBaseURI + idCounter)
+
+        const uri = await this.contract.uri(0)
+        expect(uri).to.equal(metadataBaseURI + idCounter)
+      })
+    })
+
+    describe('Failure', async () => {
+      it('should not allow minting if ether sent is less than the total mint price', async function () {
+        this.contract = await ProvNFT.new([payee1, payee2], [50, 50])
+
+        try {
+          const result = await this.contract.mint(
+            metadataBaseURI + ++idCounter,
+            {
+              value: toWei('0.001'),
+              from: owner,
+            }
+          )
+          expect.fail('Expected transaction to be reverted')
+        } catch (error) {
+          expect(error.message).to.include(
+            'revert Invalid ether amount for minting'
+          )
+        }
+      })
     })
   })
 
   describe('Batch Minting', () => {
-    let mintAmount = 3
+    let mintAmount = 2
     let metadataURIs = []
 
-    before(async function () {
-      this.contract = await ProvNFT.new([payee1, payee2], [50, 50])
-
+    before(async () => {
       // generate metadataURIs
       for (let id = 0; id < mintAmount; id++) {
         metadataURIs.push(`https://example.com/token_metadata/${id}`)
       }
     })
 
-    it('should allow minting of multiple new NFTs', async function () {
-      const result = await this.contract.mintBatch(mintAmount, metadataURIs, {
-        value: web3.utils.toWei('0.03', 'ether'),
-        from: owner,
+    describe('Success', async () => {
+      beforeEach(async function () {
+        this.contract = await ProvNFT.new([payee1, payee2], [50, 50])
       })
 
-      expect(result.logs).to.have.lengthOf(4)
-      // NFT URIs logs
-      expect(result.logs[0].event).to.equal('URI')
-      expect(result.logs[0].args.id.toNumber()).to.equal(0)
-      expect(result.logs[0].args.value).to.equal(
-        'https://example.com/token_metadata/0'
-      )
-      expect(result.logs[1].event).to.equal('URI')
-      expect(result.logs[1].args.id.toNumber()).to.equal(1)
-      expect(result.logs[1].args.value).to.equal(
-        'https://example.com/token_metadata/1'
-      )
-      expect(result.logs[2].event).to.equal('URI')
-      expect(result.logs[2].args.id.toNumber()).to.equal(2)
-      expect(result.logs[2].args.value).to.equal(
-        'https://example.com/token_metadata/2'
-      )
-      // NFT Transfer Batch Event
-      const ids = result.logs[3].args.ids.map(id => id.toNumber())
-      expect(ids).to.deep.equal([0, 1, 2])
-      expect(result.logs[3].args.from).to.equal(
-        '0x0000000000000000000000000000000000000000'
-      )
-      expect(result.logs[3].args.to).to.equal(owner)
+      it('should allow minting of multiple new NFTs', async function () {
+        const result = await this.contract.mintBatch(mintAmount, metadataURIs, {
+          value: calculateFee(mintingFee, mintAmount),
+          from: owner,
+        })
 
-      const uri1 = await this.contract.uri(0)
-      expect(uri1).to.equal(metadataURIs[0])
-      const uri2 = await this.contract.uri(1)
-      expect(uri2).to.equal(metadataURIs[1])
-      const uri3 = await this.contract.uri(2)
-      expect(uri3).to.equal(metadataURIs[2])
+        // NFT URI logs
+        expect(result.logs).to.have.lengthOf(mintAmount + 1)
+        for (let id = 0; id < mintAmount; id++) {
+          expect(result.logs[id].event).to.equal('URI')
+          const nftId = result.logs[id].args.id.toNumber()
+          expect(nftId).to.equal(id)
+          expect(result.logs[id].args.value).to.equal(
+            `https://example.com/token_metadata/${nftId}`
+          )
+        }
+
+        // NFT Transfer Batch Event
+        const logIds = result.logs[mintAmount].args.ids.map(id => id.toNumber())
+        const actualIds = Array.from({ length: mintAmount }, (_, i) => i)
+        expect(logIds).to.deep.equal(actualIds)
+        expect(result.logs[mintAmount].args.from).to.equal(
+          '0x0000000000000000000000000000000000000000'
+        )
+        expect(result.logs[mintAmount].args.to).to.equal(owner)
+
+        // NFT URIs associated with their IDs
+        for (let id = 0; id < mintAmount; id++) {
+          const uri = await this.contract.uri(id)
+          expect(uri).to.equal(metadataURIs[id])
+        }
+      })
     })
 
-    // it('should not allow minting if ether sent is less than the total mint price', async function () {
+    describe('Failure', async () => {
+      it('should not allow minting if ether sent is less than the total mint price', async function () {
+        this.contract = await ProvNFT.new([payee1, payee2], [50, 50])
+
+        try {
+          const result = await this.contract.mintBatch(
+            mintAmount,
+            metadataURIs,
+            {
+              value: toWei('0.001'),
+              from: owner,
+            }
+          )
+          expect.fail('Expected transaction to be reverted')
+        } catch (error) {
+          expect(error.message).to.include(
+            'revert Invalid ether amount for minting'
+          )
+        }
+      })
+    })
   })
 })
