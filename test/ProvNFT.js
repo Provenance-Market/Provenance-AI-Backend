@@ -85,6 +85,19 @@ contract('ProvNFT', accounts => {
         expect(result.logs[1].args.id.toNumber()).to.equal(1)
         expect(result.logs[1].args.value).to.equal(metadataBaseURI + idCounter)
       })
+
+      it('should mint from another user', async function () {
+        result = await this.contract.mint(metadataBaseURI + ++idCounter, {
+          value: mintingFee,
+          from: payee1,
+        })
+
+        expect(result.logs[0].event).to.equal('TransferSingle')
+        expect(result.logs[0].args.id.toNumber()).to.equal(2)
+        expect(result.logs[1].event).to.equal('URI')
+        expect(result.logs[1].args.id.toNumber()).to.equal(2)
+        expect(result.logs[1].args.value).to.equal(metadataBaseURI + idCounter)
+      })
     })
 
     describe('Failure', async () => {
@@ -176,6 +189,28 @@ contract('ProvNFT', accounts => {
         expect(result.logs[mintAmount].event).to.equal('TransferBatch')
         expect(logIds).to.deep.equal(actualIds)
         expect(result.logs[mintAmount].args.to).to.equal(owner)
+        expect(result.logs[mintAmount].args.from).to.equal(
+          '0x0000000000000000000000000000000000000000'
+        )
+      })
+
+      it('should batch mint from another user', async function () {
+        firstEmptyId = (await this.contract.getTotalSupply()).toNumber()
+        mintAmount = 2
+        let metadataURIs = genBatchMetadataURIs(firstEmptyId, mintAmount)
+        result = await this.contract.mintBatch(mintAmount, metadataURIs, {
+          value: calculateFee(mintingFee, mintAmount),
+          from: payee2,
+        })
+        const logIds = result.logs[mintAmount].args.ids.map(id => id.toNumber())
+        const actualIds = Array.from(
+          { length: mintAmount },
+          (_, i) => firstEmptyId + i
+        )
+
+        expect(result.logs[mintAmount].event).to.equal('TransferBatch')
+        expect(logIds).to.deep.equal(actualIds)
+        expect(result.logs[mintAmount].args.to).to.equal(payee2)
         expect(result.logs[mintAmount].args.from).to.equal(
           '0x0000000000000000000000000000000000000000'
         )
