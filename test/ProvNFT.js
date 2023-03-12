@@ -1,5 +1,8 @@
 const ProvNFT = artifacts.require('ProvNFT')
 const BN = require('bn.js')
+const { toBN } = require('web3-utils')
+const chai = require('chai')
+const expect = chai.use(require('chai-bn')(BN)).expect
 
 const toWei = etherAmount => web3.utils.toWei(etherAmount, 'ether')
 
@@ -97,6 +100,26 @@ contract('ProvNFT', accounts => {
         expect(result.logs[1].event).to.equal('URI')
         expect(result.logs[1].args.id.toNumber()).to.equal(2)
         expect(result.logs[1].args.value).to.equal(metadataBaseURI + idCounter)
+      })
+
+      it("should update the minter's ether balance", async function () {
+        const amountBeforeMint = new BN(await web3.eth.getBalance(payee1))
+        result = await this.contract.mint(metadataBaseURI + ++idCounter, {
+          value: mintingFee,
+          from: payee1,
+        })
+        const gasUsed = new BN(result.receipt.gasUsed)
+        const gasPrice = new BN(await web3.eth.getGasPrice())
+        const txCost = gasUsed.mul(gasPrice)
+        const amountAfterMint = new BN(await web3.eth.getBalance(payee1))
+        const expectedAmount = amountBeforeMint
+          .sub(toBN(mintingFee))
+          .sub(toBN(txCost))
+
+        expect(amountAfterMint).to.be.a.bignumber.closeTo(
+          expectedAmount,
+          toBN(1e15)
+        )
       })
     })
 
