@@ -136,6 +136,18 @@ contract('ProvNFT', accounts => {
     })
   })
 
+  describe('Image Generation', () => {
+    describe('Success', async () => {
+      it('should pay the AI image generation costs', async () => {
+        this.contract = await ProvNFT.new([owner], [100], { from: owner })
+        await this.contract.imageGenerationPayment(toWei('0.5'), {
+          value: toWei('0.5'),
+          from: owner,
+        })
+      })
+    })
+  })
+
   describe('Batch Minting', async function () {
     let result, firstEmptyId, metadataURIs, mintAmount
 
