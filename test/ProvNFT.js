@@ -21,6 +21,25 @@ const genBatchMetadataURIs = (startId, amount) => {
   return metadataURIs
 }
 
+async function assertSingleMintEvent(
+  contract,
+  metadataBaseURI,
+  idCounter,
+  owner,
+  mintingFee
+) {
+  const { logs } = await contract.mint(metadataBaseURI + idCounter, {
+    value: mintingFee,
+    from: owner,
+  })
+
+  expect(logs[0].event).to.equal('TransferSingle')
+  expect(logs[0].args.id.toNumber()).to.equal(idCounter)
+  expect(logs[1].event).to.equal('URI')
+  expect(logs[1].args.id.toNumber()).to.equal(idCounter)
+  expect(logs[1].args.value).to.equal(metadataBaseURI + idCounter)
+}
+
 async function assertMintBatchEvent({
   contract,
   to,
@@ -71,6 +90,17 @@ contract('ProvNFT', accounts => {
       )
       assert(provNFT.address !== '')
     })
+
+    it('should have mintPrice equal to 0.01 ether', async function () {
+      this.contract = await ProvNFT.new([owner], [100], { from: owner })
+      const actualMintPrice = await this.contract.mintPrice()
+
+      assert.equal(
+        actualMintPrice,
+        mintingFee,
+        'mintPrice is not equal to 0.01 ether'
+      )
+    })
   })
 
   describe('Minting', () => {
@@ -110,29 +140,23 @@ contract('ProvNFT', accounts => {
       })
 
       it('should increment the token Ids correctly', async function () {
-        result = await this.contract.mint(metadataBaseURI + ++idCounter, {
-          value: mintingFee,
-          from: owner,
-        })
-
-        expect(result.logs[0].event).to.equal('TransferSingle')
-        expect(result.logs[0].args.id.toNumber()).to.equal(1)
-        expect(result.logs[1].event).to.equal('URI')
-        expect(result.logs[1].args.id.toNumber()).to.equal(1)
-        expect(result.logs[1].args.value).to.equal(metadataBaseURI + idCounter)
+        await assertSingleMintEvent(
+          this.contract,
+          metadataBaseURI,
+          ++idCounter,
+          owner,
+          mintingFee
+        )
       })
 
       it('should mint from another user', async function () {
-        result = await this.contract.mint(metadataBaseURI + ++idCounter, {
-          value: mintingFee,
-          from: payee1,
-        })
-
-        expect(result.logs[0].event).to.equal('TransferSingle')
-        expect(result.logs[0].args.id.toNumber()).to.equal(2)
-        expect(result.logs[1].event).to.equal('URI')
-        expect(result.logs[1].args.id.toNumber()).to.equal(2)
-        expect(result.logs[1].args.value).to.equal(metadataBaseURI + idCounter)
+        await assertSingleMintEvent(
+          this.contract,
+          metadataBaseURI,
+          ++idCounter,
+          payee1,
+          mintingFee
+        )
       })
 
       it("should update the minter's ether balance", async function () {
