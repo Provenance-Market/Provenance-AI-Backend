@@ -3,6 +3,7 @@ const BN = require('bn.js')
 const { toBN } = require('web3-utils')
 const chai = require('chai')
 const expect = chai.use(require('chai-bn')(BN)).expect
+const truffleAssert = require('truffle-assertions')
 
 const toWei = etherAmount => web3.utils.toWei(etherAmount, 'ether')
 
@@ -19,6 +20,39 @@ const genBatchMetadataURIs = (startId, amount) => {
     metadataURIs.push(`https://example.com/token_metadata/${id}`)
   }
   return metadataURIs
+}
+
+async function assertMintBatchEvent({
+  contract,
+  to,
+  fee,
+  mintAmount,
+  startingId,
+}) {
+  const metadataURIs = genBatchMetadataURIs(startingId, mintAmount)
+  const tx = await contract.mintBatch(mintAmount, metadataURIs, {
+    value: calculateFee(fee, mintAmount),
+    from: to,
+  })
+  const ev = tx.logs[mintAmount].args
+
+  expect(ev.to).to.equal(to, 'to address should be set to the sender')
+  expect(ev.from).to.equal(
+    '0x0000000000000000000000000000000000000000',
+    'from address should be set to 0x0'
+  )
+  expect(ev.ids.length).to.equal(
+    mintAmount,
+    'number of minted tokens should match mint amount'
+  )
+  expect(ev.values.length).to.equal(
+    mintAmount,
+    'number of token quantities should match mint amount'
+  )
+
+  const logIds = ev.ids.map(id => id.toNumber())
+  const actualIds = Array.from({ length: mintAmount }, (_, i) => startingId + i)
+  expect(logIds).to.deep.equal(actualIds, 'minted token ids should be correct')
 }
 
 contract('ProvNFT', accounts => {
@@ -199,43 +233,62 @@ contract('ProvNFT', accounts => {
         firstEmptyId = (await this.contract.getTotalSupply()).toNumber()
         mintAmount = 3
         let metadataURIs = genBatchMetadataURIs(firstEmptyId, mintAmount)
-        result = await this.contract.mintBatch(mintAmount, metadataURIs, {
-          value: calculateFee(mintingFee, mintAmount),
-          from: owner,
-        })
-        const logIds = result.logs[mintAmount].args.ids.map(id => id.toNumber())
+        const { logs } = await this.contract.mintBatch(
+          mintAmount,
+          metadataURIs,
+          {
+            value: calculateFee(mintingFee, mintAmount),
+            from: owner,
+          }
+        )
+        const logIds = logs[mintAmount].args.ids.map(id => id.toNumber())
         const actualIds = Array.from(
           { length: mintAmount },
           (_, i) => firstEmptyId + i
         )
 
-        expect(result.logs[mintAmount].event).to.equal('TransferBatch')
+        expect(logs[mintAmount].event).to.equal('TransferBatch')
         expect(logIds).to.deep.equal(actualIds)
-        expect(result.logs[mintAmount].args.to).to.equal(owner)
-        expect(result.logs[mintAmount].args.from).to.equal(
+        expect(logs[mintAmount].args.to).to.equal(owner)
+        expect(logs[mintAmount].args.from).to.equal(
           '0x0000000000000000000000000000000000000000'
         )
       })
 
-      it('should batch mint from another user', async function () {
+      it('should batch mint from another user & emit event', async function () {
         firstEmptyId = (await this.contract.getTotalSupply()).toNumber()
+
+        await assertMintBatchEvent({
+          contract: this.contract,
+          to: payee2,
+          fee: mintingFee,
+          mintAmount: 2,
+          startingId: firstEmptyId,
+        })
+      })
+
+      it("should update the minter's ether balance", async function () {
+        const amountBeforeMint = new BN(await web3.eth.getBalance(payee2))
         mintAmount = 2
-        let metadataURIs = genBatchMetadataURIs(firstEmptyId, mintAmount)
+
+        firstEmptyId = (await this.contract.getTotalSupply()).toNumber()
+        let metadataURIs = genBatchMetadataURIs(firstEmptyId, 2)
         result = await this.contract.mintBatch(mintAmount, metadataURIs, {
           value: calculateFee(mintingFee, mintAmount),
           from: payee2,
         })
-        const logIds = result.logs[mintAmount].args.ids.map(id => id.toNumber())
-        const actualIds = Array.from(
-          { length: mintAmount },
-          (_, i) => firstEmptyId + i
-        )
 
-        expect(result.logs[mintAmount].event).to.equal('TransferBatch')
-        expect(logIds).to.deep.equal(actualIds)
-        expect(result.logs[mintAmount].args.to).to.equal(payee2)
-        expect(result.logs[mintAmount].args.from).to.equal(
-          '0x0000000000000000000000000000000000000000'
+        const gasUsed = new BN(result.receipt.gasUsed)
+        const gasPrice = new BN(await web3.eth.getGasPrice())
+        const txCost = gasUsed.mul(gasPrice)
+        const amountAfterMint = new BN(await web3.eth.getBalance(payee2))
+        const expectedAmount = amountBeforeMint
+          .sub(toBN(mintingFee))
+          .sub(toBN(txCost))
+
+        expect(amountAfterMint).to.be.a.bignumber.closeTo(
+          expectedAmount,
+          toBN(1e17)
         )
       })
     })

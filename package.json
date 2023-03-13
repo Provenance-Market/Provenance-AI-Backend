@@ -10,7 +10,7 @@
   "scripts": {
     "ganache": "ganache --chain.chainId 1337 -p 8545 -a 20 -e 10000 -m 'egg cannon figure ketchup fall issue never share online shiver chief album'"
   },
-  "author": "Ed-Marcavage, aaronjan98",
+  "author": "Ed-Marcavage, aaronjan98, Rohith09",
   "license": "MIT",
   "devDependencies": {
     "@aaronjan98/solidity-prettier-conf": "^1.0.2",
