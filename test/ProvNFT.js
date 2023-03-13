@@ -3,75 +3,13 @@ const BN = require('bn.js')
 const { toBN } = require('web3-utils')
 const chai = require('chai')
 const expect = chai.use(require('chai-bn')(BN)).expect
-
-const toWei = etherAmount => web3.utils.toWei(etherAmount, 'ether')
-
-const calculateFee = (mintingFee, mintAmount) => {
-  const amount = new web3.utils.BN(mintAmount)
-  const fee = web3.utils.toBN(mintingFee)
-  const totalFee = fee.mul(amount)
-  return totalFee
-}
-
-const genBatchMetadataURIs = (startId, amount) => {
-  let metadataURIs = []
-  for (let id = startId; id < startId + amount; id++) {
-    metadataURIs.push(`https://example.com/token_metadata/${id}`)
-  }
-  return metadataURIs
-}
-
-async function assertSingleMintEvent(
-  contract,
-  metadataBaseURI,
-  idCounter,
-  owner,
-  mintingFee
-) {
-  const { logs } = await contract.mint(metadataBaseURI + idCounter, {
-    value: mintingFee,
-    from: owner,
-  })
-
-  expect(logs[0].event).to.equal('TransferSingle')
-  expect(logs[0].args.id.toNumber()).to.equal(idCounter)
-  expect(logs[1].event).to.equal('URI')
-  expect(logs[1].args.id.toNumber()).to.equal(idCounter)
-  expect(logs[1].args.value).to.equal(metadataBaseURI + idCounter)
-}
-
-async function assertMintBatchEvent({
-  contract,
-  to,
-  fee,
-  mintAmount,
-  startingId,
-}) {
-  const metadataURIs = genBatchMetadataURIs(startingId, mintAmount)
-  const tx = await contract.mintBatch(mintAmount, metadataURIs, {
-    value: calculateFee(fee, mintAmount),
-    from: to,
-  })
-  const ev = tx.logs[mintAmount].args
-
-  expect(ev.to).to.equal(to, 'to address should be set to the sender')
-  expect(ev.from).to.equal(
-    '0x0000000000000000000000000000000000000000',
-    'from address should be set to 0x0'
-  )
-  expect(ev.ids.length).to.equal(
-    mintAmount,
-    'number of minted tokens should match mint amount'
-  )
-  expect(ev.values.length).to.equal(
-    mintAmount,
-    'number of token quantities should match mint amount'
-  )
-
-  const logIds = ev.ids.map(id => id.toNumber())
-  const actualIds = Array.from({ length: mintAmount }, (_, i) => startingId + i)
-  expect(logIds).to.deep.equal(actualIds, 'minted token ids should be correct')
-}
+const {
+  toWei,
+  calculateFee,
+  genBatchMetadataURIs,
+  assertSingleMintEvent,
+  assertMintBatchEvent,
+} = require('./helpers/helpers.js')
 
 contract('ProvNFT', accounts => {
   const metadataBaseURI = 'https://example.com/token_metadata/'
@@ -81,11 +19,7 @@ contract('ProvNFT', accounts => {
   describe('Deployment', () => {
     it('should deploy smart contract properly', async () => {
       const provNFT = await ProvNFT.deployed(
-        [
-          '0x7e48cd33f9b90c7d07973278754e22b9245ee1b5',
-          '0x6da55d9e5836e03c2b20ed9b7673ee07b5dd8ad9',
-          '0xf81e5ac85e5f3badfb4ab58a4a7eef5e70d4b056',
-        ],
+        [owner, payee1, payee2],
         [33, 33, 33]
       )
       assert(provNFT.address !== '')
