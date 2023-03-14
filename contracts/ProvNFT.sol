@@ -6,18 +6,21 @@ import '@openzeppelin/contracts/token/ERC1155/extensions/ERC1155Supply.sol';
 import '@openzeppelin/contracts/access/Ownable.sol';
 import '@openzeppelin/contracts/utils/Counters.sol';
 import '@openzeppelin/contracts/finance/PaymentSplitter.sol';
+import '@ganache/console.log/console.sol';
 
 /// @custom:security-contact ProvenanceMarket.art@proton.me
 contract ProvNFT is ERC1155URIStorage, ERC1155Supply, Ownable, PaymentSplitter {
-    //Events
-    event NFTMinted(address indexed owner, uint256 indexed tokenId, uint256 value);
-
-
     using Counters for Counters.Counter;
     Counters.Counter private _tokenIds;
 
     uint8 constant SUPPLY_PER_ID = 1;
     uint256 public mintPrice = 0.01 ether;
+
+    event NFTMinted(
+        address indexed owner,
+        uint256 indexed tokenId,
+        uint256 value
+    );
 
     constructor(
         address[] memory _payees,
@@ -25,7 +28,7 @@ contract ProvNFT is ERC1155URIStorage, ERC1155Supply, Ownable, PaymentSplitter {
     ) ERC1155('') PaymentSplitter(_payees, _shares) {}
 
     function mint(string memory metadataURI) public payable returns (uint256) {
-        require(msg.value == mintPrice, 'Invalid ether amount for minting');
+        require(msg.value >= mintPrice, 'Invalid ether amount for minting');
 
         uint256 newItemId = _tokenIds.current();
         _mint(msg.sender, newItemId, SUPPLY_PER_ID, '');
@@ -33,13 +36,13 @@ contract ProvNFT is ERC1155URIStorage, ERC1155Supply, Ownable, PaymentSplitter {
         _tokenIds.increment();
 
         emit NFTMinted(msg.sender, newItemId, msg.value);
-        
+
         return newItemId;
     }
 
     function imageGenerationPayment(uint256 cost) public payable {
         require(
-            msg.value == cost,
+            msg.value >= cost,
             'Insufficient payment amount for AI image generation'
         );
     }
@@ -61,9 +64,8 @@ contract ProvNFT is ERC1155URIStorage, ERC1155Supply, Ownable, PaymentSplitter {
         for (uint i = 0; i < mintAmount; i++) {
             uint256 newItemId = _tokenIds.current();
             ids[i] = newItemId;
-            _tokenIds.increment();
-
             _setURI(newItemId, metadataURIs[i]);
+            _tokenIds.increment();
         }
 
         // Create array of `mintAmount` elements for unique batch mints
@@ -78,6 +80,10 @@ contract ProvNFT is ERC1155URIStorage, ERC1155Supply, Ownable, PaymentSplitter {
 
         _mintBatch(msg.sender, ids, amounts, '');
         return ids;
+    }
+
+    function getTotalSupply() public view returns (uint256) {
+        return _tokenIds.current();
     }
 
     function withdraw() external onlyOwner {
