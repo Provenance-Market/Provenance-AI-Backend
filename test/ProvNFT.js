@@ -113,6 +113,11 @@ contract('ProvNFT', accounts => {
           toBN(1e15)
         )
       })
+
+      it('should return the total supply that has been minted', async function () {
+        const totalSupply = await this.contract.getTotalSupply()
+        expect(totalSupply.toNumber()).to.equal(4)
+      })
     })
 
     describe('Failure', async () => {
@@ -262,6 +267,11 @@ contract('ProvNFT', accounts => {
           expectedAmount,
           toBN(1e17)
         )
+      })
+
+      it('should return the total supply that has been minted', async function () {
+        const totalSupply = await this.contract.getTotalSupply()
+        expect(totalSupply.toNumber()).to.equal(12)
       })
     })
 
