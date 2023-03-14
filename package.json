@@ -5,7 +5,8 @@
   "dependencies": {
     "@openzeppelin/contracts": "^4.8.2",
     "@truffle/hdwallet-provider": "^2.1.7",
-    "dotenv": "^16.0.3"
+    "dotenv": "^16.0.3",
+    "fs-extra": "^11.1.0"
   },
   "scripts": {
     "ganache": "ganache --chain.chainId 1337 -p 8545 -a 20 -e 10000 -m 'egg cannon figure ketchup fall issue never share online shiver chief album'"

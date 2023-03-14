@@ -4,9 +4,9 @@ module.exports = function (deployer) {
   deployer.deploy(
     NFT,
     [
-      '0x7e48cd33f9b90c7d07973278754e22b9245ee1b5',
-      '0x6da55d9e5836e03c2b20ed9b7673ee07b5dd8ad9',
-      '0xf81e5ac85e5f3badfb4ab58a4a7eef5e70d4b056',
+      '0xAB80b7719B06aeD5B3814dbaf54DfdF75B26ab78', 
+      '0x41196385fB1ec44F30c2E64D789dBa2ba004Bb24',
+      '0xE33cb5b4B828C775122FB90F7Dcc7c750b4aee3f',
     ],
     [33, 33, 33]
   )

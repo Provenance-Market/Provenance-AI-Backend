@@ -2,7 +2,7 @@ const fs = require('fs').promises
 const abi = require('../build/contracts/ProvNFT.json').abi
 
 ;(async function () {
-  const filePath = '../Provenance-AI-Frontend/src/abis/ProvNFT.json'
+  const filePath = '../provenace-ai-frontend/src/abis/ProvNFT.json'
 
   try {
     await fs.writeFile(filePath, JSON.stringify(abi, null, 2), 'utf8')

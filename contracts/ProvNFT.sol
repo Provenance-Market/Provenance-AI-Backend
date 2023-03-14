@@ -9,6 +9,10 @@ import '@openzeppelin/contracts/finance/PaymentSplitter.sol';
 
 /// @custom:security-contact ProvenanceMarket.art@proton.me
 contract ProvNFT is ERC1155URIStorage, ERC1155Supply, Ownable, PaymentSplitter {
+    //Events
+    event NFTMinted(address indexed owner, uint256 indexed tokenId, uint256 value);
+
+
     using Counters for Counters.Counter;
     Counters.Counter private _tokenIds;
 
@@ -27,6 +31,9 @@ contract ProvNFT is ERC1155URIStorage, ERC1155Supply, Ownable, PaymentSplitter {
         _mint(msg.sender, newItemId, SUPPLY_PER_ID, '');
         _setURI(newItemId, metadataURI);
         _tokenIds.increment();
+
+        emit NFTMinted(msg.sender, newItemId, msg.value);
+        
         return newItemId;
     }
 
