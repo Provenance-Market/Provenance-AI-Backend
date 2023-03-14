@@ -22,7 +22,7 @@ contract ProvNFT is ERC1155URIStorage, ERC1155Supply, Ownable, PaymentSplitter {
     ) ERC1155('') PaymentSplitter(_payees, _shares) {}
 
     function mint(string memory metadataURI) public payable returns (uint256) {
-        require(msg.value == mintPrice, 'Invalid ether amount for minting');
+        require(msg.value >= mintPrice, 'Invalid ether amount for minting');
 
         uint256 newItemId = _tokenIds.current();
         _mint(msg.sender, newItemId, SUPPLY_PER_ID, '');
@@ -33,7 +33,7 @@ contract ProvNFT is ERC1155URIStorage, ERC1155Supply, Ownable, PaymentSplitter {
 
     function imageGenerationPayment(uint256 cost) public payable {
         require(
-            msg.value == cost,
+            msg.value >= cost,
             'Insufficient payment amount for AI image generation'
         );
     }

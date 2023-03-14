@@ -146,6 +146,24 @@ contract('ProvNFT', accounts => {
         })
       })
     })
+
+    describe('Failure', async () => {
+      it('should revert for insufficient payment amount', async () => {
+        this.contract = await ProvNFT.new([owner], [100], { from: owner })
+
+        try {
+          await this.contract.imageGenerationPayment(toWei('0.5'), {
+            value: toWei('0.4'),
+            from: owner,
+          })
+          expect.fail('Expected transaction to be reverted')
+        } catch (error) {
+          expect(error.message).to.include(
+            'revert Insufficient payment amount for AI image generation'
+          )
+        }
+      })
+    })
   })
 
   describe('Batch Minting', async function () {
