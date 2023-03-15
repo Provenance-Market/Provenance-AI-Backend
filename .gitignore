@@ -17,6 +17,12 @@ build_webpack
 cache
 artifacts
 
+# Flatten contracts
+*flat.sol
+flatten
+build/*flat.sol
+build/flatten
+
 ### macOS ###
 # General
 .DS_Store

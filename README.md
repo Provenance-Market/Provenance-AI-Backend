@@ -21,6 +21,53 @@
 yarn
 ```
 
+## Run tests
+
+```sh
+npx truffle test
+```
+
+## Deploy to Public Networks
+
+1. Configure keys in your `.env`
+
+```.env
+MNEMONIC="12 word seed phrase or secret/private key"
+INFURA_PROJECT_SECRET="used for goerli"
+ALCHEMY_API_KEY="used for mumbai"
+ETHERSCAN_API_KEY="used to verify contract"
+POLYGONSCAN_API_KEY="used to verify contract"
+```
+
+2. Deploy to testnet or mainnet
+
+- N.B. Add and configure networks in `truffle-config.js` and make sure to run the deploy command in the root of the project
+- Command for deploying with all your migration scripts
+
+```sh
+npx truffle migrate --network goerli
+```
+
+- Or compile & deploy contract from scratch
+
+```sh
+npx truffle deploy --network mumbai --reset
+```
+
+3. Just in case you need to flatten your contract
+
+- N.B. Skip this because truffle links dependent contracts during deployment; but, here's the command if you need to flatten for a certain network
+
+```sh
+npx truffle-flattener ProvNFT.sol > flatten/ProvNFT_flat.sol
+```
+
+4. Verify Contract
+
+```sh
+npx truffle run verify ProvNFT --network goerli
+```
+
 ## Run Project Locally
 
 1. Run ganache blockchain
@@ -50,12 +97,6 @@ npx truffle migrate --network ganache
 
 ```sh
 node scripts/saveABI.js
-```
-
-## Run tests
-
-```sh
-npx truffle test
 ```
 
 ## Authors

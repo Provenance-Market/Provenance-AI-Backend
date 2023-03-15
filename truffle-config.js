@@ -1,9 +1,14 @@
 require('dotenv').config()
 const HDWalletProvider = require('@truffle/hdwallet-provider')
-const ganacheURL = 'http://127.0.0.1:8545'
-const infuraURL = `https://goerli.infura.io/v3/${process.env.INFURA_PROJECT_SECRET}`
-const infuraPolygonURL = `https://polygon-mumbai.infura.io/v3/${process.env.INFURA_PROJECT_SECRET}`
-const mnemonic = process.env.MNEMONIC
+const {
+  MNEMONIC,
+  INFURA_PROJECT_SECRET,
+  ALCHEMY_API_KEY,
+  ETHERSCAN_API_KEY,
+  POLYGONSCAN_API_KEY,
+} = process.env
+const infuraURL = `https://goerli.infura.io/v3/${INFURA_PROJECT_SECRET}`
+const alchemyMumbaiURL = `https://polygon-mumbai.g.alchemy.com/v2/${ALCHEMY_API_KEY}`
 
 module.exports = {
   networks: {
@@ -16,17 +21,21 @@ module.exports = {
       skipDryRun: true,
     },
     goerli: {
-      provider: () => new HDWalletProvider(mnemonic, infuraURL),
+      provider: () => new HDWalletProvider(MNEMONIC, infuraURL),
       network_id: 5,
       timeoutBlocks: 200,
       skipDryRun: true,
     },
     mumbai: {
-      provider: () => new HDWalletProvider(mnemonic, infuraPolygonURL),
+      provider: () => new HDWalletProvider(MNEMONIC, alchemyMumbaiURL),
       network_id: 80001,
       timeoutBlocks: 900,
       skipDryRun: true,
     },
+  },
+  api_keys: {
+    etherscan: `${ETHERSCAN_API_KEY}`,
+    polygonscan: `${POLYGONSCAN_API_KEY}`,
   },
   compilers: {
     solc: {
