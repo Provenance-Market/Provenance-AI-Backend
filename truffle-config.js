@@ -6,9 +6,11 @@ const {
   ALCHEMY_API_KEY,
   ETHERSCAN_API_KEY,
   POLYGONSCAN_API_KEY,
+  ALCHEMY_SEPOLIA_API_KEY,
 } = process.env
 const infuraURL = `https://goerli.infura.io/v3/${INFURA_PROJECT_SECRET}`
 const alchemyMumbaiURL = `https://polygon-mumbai.g.alchemy.com/v2/${ALCHEMY_API_KEY}`
+const sepoliaURL = `https://eth-sepolia.g.alchemy.com/v2/${ALCHEMY_SEPOLIA_API_KEY}`
 
 module.exports = {
   networks: {
@@ -23,6 +25,12 @@ module.exports = {
     goerli: {
       provider: () => new HDWalletProvider(MNEMONIC, infuraURL),
       network_id: 5,
+      timeoutBlocks: 200,
+      skipDryRun: true,
+    },
+    sepolia: {
+      provider: () => new HDWalletProvider(MNEMONIC, sepoliaURL),
+      network_id: 11155111,
       timeoutBlocks: 200,
       skipDryRun: true,
     },
