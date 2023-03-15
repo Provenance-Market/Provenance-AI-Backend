@@ -273,6 +273,50 @@ contract('ProvNFT', accounts => {
         const totalSupply = await this.contract.getTotalSupply()
         expect(totalSupply.toNumber()).to.equal(12)
       })
+
+      it("updates the payees' balances", async function () {
+        firstEmptyId = (await this.contract.getTotalSupply()).toNumber()
+
+        // Get the total shares held by all the payees
+        const totalShares = new BN(await this.contract.totalShares())
+
+        // Get the balances of payee1 and payee2 on the contract before the minting operation
+        const balanceBeforeMint1 = new BN(await this.contract.shares(payee1))
+        const balanceBeforeMint2 = new BN(await this.contract.shares(payee2))
+        console.log('before: ', balanceBeforeMint1)
+
+        // Mint new tokens
+        await assertMintBatchEvent({
+          contract: this.contract,
+          to: owner,
+          fee: mintingFee,
+          mintAmount: 2,
+          startingId: firstEmptyId,
+        })
+
+        // Get the balances of payee1 and payee2 on the contract after the minting operation
+        const balanceAfterMint1 = new BN(await this.contract.shares(payee1))
+        const balanceAfterMint2 = new BN(await this.contract.shares(payee2))
+        console.log('after: ', balanceAfterMint1)
+
+        // Calculate the expected balances of payee1 and payee2 after the minting operation
+        const expectedBalance1 = balanceBeforeMint1.add(
+          new BN(mintingFee)
+            .mul(balanceBeforeMint1)
+            .mul(new BN(10).pow(new BN(18)))
+            .div(totalShares)
+        )
+        const expectedBalance2 = balanceBeforeMint2.add(
+          new BN(mintingFee)
+            .mul(balanceBeforeMint2)
+            .mul(new BN(10).pow(new BN(18)))
+            .div(totalShares)
+        )
+
+        // Check that the balances of payee1 and payee2 have increased by the expected amount
+        expect(balanceAfterMint1).to.be.bignumber.equal(expectedBalance1)
+        expect(balanceAfterMint2).to.be.bignumber.equal(expectedBalance2)
+      })
     })
 
     describe('Failure', async () => {
