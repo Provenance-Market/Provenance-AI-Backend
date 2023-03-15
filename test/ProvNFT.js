@@ -1,10 +1,9 @@
 const ProvNFT = artifacts.require('ProvNFT')
 const BN = require('bn.js')
-const { toBN } = require('web3-utils')
+const { toWei, toBN } = require('web3-utils')
 const chai = require('chai')
 const expect = chai.use(require('chai-bn')(BN)).expect
 const {
-  toWei,
   calculateFee,
   genBatchMetadataURIs,
   assertSingleMintEvent,
@@ -142,36 +141,6 @@ contract('ProvNFT', accounts => {
     })
   })
 
-  describe('Image Generation', () => {
-    describe('Success', async () => {
-      it('should pay the AI image generation costs', async () => {
-        this.contract = await ProvNFT.new([owner], [100], { from: owner })
-        await this.contract.imageGenerationPayment(toWei('0.5'), {
-          value: toWei('0.5'),
-          from: owner,
-        })
-      })
-    })
-
-    describe('Failure', async () => {
-      it('should revert for insufficient payment amount', async () => {
-        this.contract = await ProvNFT.new([owner], [100], { from: owner })
-
-        try {
-          await this.contract.imageGenerationPayment(toWei('0.5'), {
-            value: toWei('0.4'),
-            from: owner,
-          })
-          expect.fail('Expected transaction to be reverted')
-        } catch (error) {
-          expect(error.message).to.include(
-            'revert Insufficient payment amount for AI image generation'
-          )
-        }
-      })
-    })
-  })
-
   describe('Batch Minting', async function () {
     let result, firstEmptyId, metadataURIs, mintAmount
 
@@ -274,46 +243,52 @@ contract('ProvNFT', accounts => {
         expect(totalSupply.toNumber()).to.equal(12)
       })
 
-      it("updates the payees' balances", async function () {
+      it("updates the payees' balances with minting fees", async function () {
         firstEmptyId = (await this.contract.getTotalSupply()).toNumber()
+        mintAmount = 3
 
         // Get the total shares held by all the payees
         const totalShares = new BN(await this.contract.totalShares())
 
-        // Get the balances of payee1 and payee2 on the contract before the minting operation
-        const balanceBeforeMint1 = new BN(await this.contract.shares(payee1))
-        const balanceBeforeMint2 = new BN(await this.contract.shares(payee2))
-        console.log('before: ', balanceBeforeMint1)
+        // Get the balances of payee1 & payee2 in the contract before the minting operation
+        const balanceBeforeMint1 = new BN(
+          await this.contract.releasable(payee1)
+        )
+        const balanceBeforeMint2 = new BN(
+          await this.contract.releasable(payee2)
+        )
 
         // Mint new tokens
         await assertMintBatchEvent({
           contract: this.contract,
           to: owner,
           fee: mintingFee,
-          mintAmount: 2,
+          mintAmount,
           startingId: firstEmptyId,
         })
 
+        // Get the balances of payee1 & payee2 in the contract after the minting operation
+        const balanceAfterMint1 = new BN(await this.contract.releasable(payee1))
+        const balanceAfterMint2 = new BN(await this.contract.releasable(payee2))
+
         // Get the balances of payee1 and payee2 on the contract after the minting operation
-        const balanceAfterMint1 = new BN(await this.contract.shares(payee1))
-        const balanceAfterMint2 = new BN(await this.contract.shares(payee2))
-        console.log('after: ', balanceAfterMint1)
+        const payee1Shares = new BN(await this.contract.shares(payee1))
+        const payee2Shares = new BN(await this.contract.shares(payee2))
 
         // Calculate the expected balances of payee1 and payee2 after the minting operation
         const expectedBalance1 = balanceBeforeMint1.add(
-          new BN(mintingFee)
-            .mul(balanceBeforeMint1)
-            .mul(new BN(10).pow(new BN(18)))
+          toBN(mintingFee)
+            .mul(toBN(mintAmount))
+            .mul(payee1Shares)
             .div(totalShares)
         )
         const expectedBalance2 = balanceBeforeMint2.add(
-          new BN(mintingFee)
-            .mul(balanceBeforeMint2)
-            .mul(new BN(10).pow(new BN(18)))
+          toBN(mintingFee)
+            .mul(toBN(mintAmount))
+            .mul(payee2Shares)
             .div(totalShares)
         )
 
-        // Check that the balances of payee1 and payee2 have increased by the expected amount
         expect(balanceAfterMint1).to.be.bignumber.equal(expectedBalance1)
         expect(balanceAfterMint2).to.be.bignumber.equal(expectedBalance2)
       })
@@ -360,6 +335,36 @@ contract('ProvNFT', accounts => {
         } catch (error) {
           expect(error.message).to.include(
             'revert metadataURIs array length does not match the NFT mint amount'
+          )
+        }
+      })
+    })
+  })
+
+  describe('Image Generation', () => {
+    describe('Success', async () => {
+      it('should pay the AI image generation costs', async () => {
+        this.contract = await ProvNFT.new([owner], [100], { from: owner })
+        await this.contract.imageGenerationPayment(toWei('0.5'), {
+          value: toWei('0.5'),
+          from: owner,
+        })
+      })
+    })
+
+    describe('Failure', async () => {
+      it('should revert for insufficient payment amount', async () => {
+        this.contract = await ProvNFT.new([owner], [100], { from: owner })
+
+        try {
+          await this.contract.imageGenerationPayment(toWei('0.5'), {
+            value: toWei('0.4'),
+            from: owner,
+          })
+          expect.fail('Expected transaction to be reverted')
+        } catch (error) {
+          expect(error.message).to.include(
+            'revert Insufficient payment amount for AI image generation'
           )
         }
       })

@@ -1,5 +1,3 @@
-const toWei = etherAmount => web3.utils.toWei(etherAmount, 'ether')
-
 const calculateFee = (mintingFee, mintAmount) => {
   const amount = new web3.utils.BN(mintAmount)
   const fee = web3.utils.toBN(mintingFee)
@@ -68,7 +66,6 @@ async function assertMintBatchEvent({
 }
 
 module.exports = {
-  toWei,
   calculateFee,
   genBatchMetadataURIs,
   assertSingleMintEvent,
