@@ -86,14 +86,6 @@ contract ProvNFT is ERC1155URIStorage, ERC1155Supply, Ownable, PaymentSplitter {
         return _tokenIds.current();
     }
 
-    function withdraw() external onlyOwner {
-        uint256 balance = address(this).balance;
-        require(balance > 0, 'Balance is 0');
-
-        (bool success, ) = payable(msg.sender).call{ value: balance }('');
-        require(success);
-    }
-
     // The following functions are overrides required by Solidity.
 
     function _beforeTokenTransfer(
