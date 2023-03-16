@@ -27,6 +27,20 @@ yarn
 npx truffle test
 ```
 
+## Code Style
+
+- Format contracts
+
+```sh
+yarn prettier
+```
+
+- Run linter
+
+```sh
+yarn linter
+```
+
 ## Deploy to Public Networks
 
 1. Configure keys in your `.env`
