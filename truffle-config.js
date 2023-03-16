@@ -9,6 +9,7 @@ const {
   ALCHEMY_SEPOLIA_API_KEY,
 } = process.env
 const infuraURL = `https://goerli.infura.io/v3/${INFURA_PROJECT_SECRET}`
+const infuraMainnetURL = `https://mainnet.infura.io/v3/${INFURA_PROJECT_SECRET}`
 const alchemyMumbaiURL = `https://polygon-mumbai.g.alchemy.com/v2/${ALCHEMY_API_KEY}`
 const sepoliaURL = `https://eth-sepolia.g.alchemy.com/v2/${ALCHEMY_SEPOLIA_API_KEY}`
 
@@ -38,6 +39,15 @@ module.exports = {
       provider: () => new HDWalletProvider(MNEMONIC, alchemyMumbaiURL),
       network_id: 80001,
       timeoutBlocks: 900,
+      skipDryRun: true,
+    },
+    mainnet: {
+      provider: () => new HDWalletProvider(MNEMONIC, infuraMainnetURL),
+      network_id: 1,
+      gas: 8000000,
+      gasPrice: 20000000000,
+      confirmations: 2,
+      timeoutBlocks: 200,
       skipDryRun: true,
     },
   },

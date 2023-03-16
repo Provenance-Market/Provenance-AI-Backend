@@ -37,6 +37,7 @@ INFURA_PROJECT_SECRET="used for goerli"
 ALCHEMY_API_KEY="used for mumbai"
 ETHERSCAN_API_KEY="used to verify contract"
 POLYGONSCAN_API_KEY="used to verify contract"
+ALCHEMY_SEPOLIA_API_KEY="alternative to goerli"
 ```
 
 2. Deploy to testnet or mainnet
@@ -51,7 +52,7 @@ npx truffle migrate --network goerli
 - Or compile & deploy contract from scratch
 
 ```sh
-npx truffle deploy --network mumbai --reset
+npx truffle deploy --network goerli --reset
 ```
 
 3. Just in case you need to flatten your contract
@@ -93,7 +94,7 @@ npx truffle migrate --network ganache
 
 5. Run this script to save the NFT ABI to the front end. The front and backend
    repos have to be adjacent to each other or else you'll have to change the
-   file path `../Provenance-AI-Frontend/src/abis/ProvNFT.json` in `scripts/saveABI.js`
+   file path `../provenance-ai-frontend/src/abis/ProvNFT.json` in `scripts/saveABI.js`
 
 ```sh
 node scripts/saveABI.js
