@@ -11,6 +11,7 @@ const {
 const infuraURL = `https://goerli.infura.io/v3/${INFURA_PROJECT_SECRET}`
 const infuraMainnetURL = `https://mainnet.infura.io/v3/${INFURA_PROJECT_SECRET}`
 const alchemyMumbaiURL = `https://polygon-mumbai.g.alchemy.com/v2/${ALCHEMY_API_KEY}`
+const infuraPolygonURL = `https://polygon-mainnet.infura.io/v3/${INFURA_PROJECT_SECRET}`
 const sepoliaURL = `https://eth-sepolia.g.alchemy.com/v2/${ALCHEMY_SEPOLIA_API_KEY}`
 
 module.exports = {
@@ -41,7 +42,16 @@ module.exports = {
       timeoutBlocks: 900,
       skipDryRun: true,
     },
-    mainnet: {
+    polygon_mainnet: {
+      provider: () => new HDWalletProvider(mnemonic, infuraPolygonURL),
+      network_id: 137,
+      gas: 8000000,
+      gasPrice: 20000000000,
+      confirmations: 2,
+      timeoutBlocks: 200,
+      skipDryRun: true,
+    },
+    ethereum_mainnet: {
       provider: () => new HDWalletProvider(MNEMONIC, infuraMainnetURL),
       network_id: 1,
       gas: 8000000,
@@ -67,4 +77,7 @@ module.exports = {
     },
   },
   plugins: ['truffle-plugin-verify'],
+  contracts_directory: './contracts/',
+  contracts_build_directory: './build/',
+  migrations_directory: './migrations/',
 }

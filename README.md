@@ -11,20 +11,16 @@
 
 > NFT marketplace for AI-generated personalized artwork
 
-### 🏠 [Homepage](#)
+## Links
 
-### ✨ [Demo](#)
+🏠 [Live Site Homepage](#) \
+✨ [Contract Deployed on Polygon](#) \
+📄 [Front End Repo](https://github.com/Provenance-Market/Provenace-AI-Frontend)
 
 ## Install
 
 ```sh
 yarn
-```
-
-## Run tests
-
-```sh
-npx truffle test
 ```
 
 ## Code Style
@@ -41,6 +37,12 @@ yarn prettier
 yarn linter
 ```
 
+## Run tests
+
+```sh
+npx truffle test
+```
+
 ## Deploy to Public Networks
 
 1. Configure keys in your `.env`
@@ -54,7 +56,15 @@ POLYGONSCAN_API_KEY="used to verify contract"
 ALCHEMY_SEPOLIA_API_KEY="alternative to goerli"
 ```
 
-2. Deploy to testnet or mainnet
+2. Just in case you need to flatten your contract
+
+- N.B. Skip this because truffle links dependent contracts during deployment; but, here's the command if you need to flatten for a certain network
+
+```sh
+npx truffle-flattener ProvNFT.sol > flatten/ProvNFT_flat.sol
+```
+
+3. Deploy to testnet or mainnet
 
 - N.B. Add and configure networks in `truffle-config.js` and make sure to run the deploy command in the root of the project
 - Command for deploying with all your migration scripts
@@ -67,14 +77,6 @@ npx truffle migrate --network goerli
 
 ```sh
 npx truffle deploy --network goerli --reset
-```
-
-3. Just in case you need to flatten your contract
-
-- N.B. Skip this because truffle links dependent contracts during deployment; but, here's the command if you need to flatten for a certain network
-
-```sh
-npx truffle-flattener ProvNFT.sol > flatten/ProvNFT_flat.sol
 ```
 
 4. Verify Contract
