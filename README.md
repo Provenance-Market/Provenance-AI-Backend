@@ -116,13 +116,20 @@ npx truffle migrate --network ganache
 node scripts/saveABI.js
 ```
 
+## Withdraw Payee Share of Funds
+
+```sh
+node scripts/withdrawFunds.js <payee_wallet_address>
+```
+
 ## Authors
 
 👤 [**Eddie**](https://github.com/Ed-Marcavage), [**AJ**](https://github.com/aaronjan98), [**Jake**](https://github.com/Rohith09)
 
 ## 🤝 Contributing
 
-Contributions, issues and feature requests are welcome!<br />Feel free to check [issues page](https://github.com/Provenance-Market/Provenace-AI-Backend/issues).
+Contributions, issues and feature requests are welcome! \
+Feel free to check [issues page](https://github.com/Provenance-Market/Provenace-AI-Backend/issues).
 
 ## Show your support
 

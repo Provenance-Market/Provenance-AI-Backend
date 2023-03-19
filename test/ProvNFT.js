@@ -17,15 +17,12 @@ contract('ProvNFT', accounts => {
 
   describe('Deployment', () => {
     it('should deploy smart contract properly', async () => {
-      const provNFT = await ProvNFT.deployed(
-        [owner, payee1, payee2],
-        [33, 33, 33]
-      )
+      const provNFT = await ProvNFT.deployed([owner, payee1, payee2], [1, 1, 1])
       assert(provNFT.address !== '')
     })
 
     it('should have mintPrice equal to 0.01 ether', async function () {
-      this.contract = await ProvNFT.new([owner], [100], { from: owner })
+      this.contract = await ProvNFT.new([owner], [1], { from: owner })
       const actualMintPrice = await this.contract.mintPrice()
 
       assert.equal(
@@ -42,7 +39,7 @@ contract('ProvNFT', accounts => {
 
     describe('Success', async () => {
       before(async function () {
-        this.contract = await ProvNFT.new([payee1, payee2], [50, 50])
+        this.contract = await ProvNFT.new([payee1, payee2], [1, 1])
 
         result = await this.contract.mint(metadataBaseURI + ++idCounter, {
           value: mintingFee,
@@ -121,7 +118,7 @@ contract('ProvNFT', accounts => {
 
     describe('Failure', async () => {
       it('should not allow minting if ether sent is less than the total mint price', async function () {
-        this.contract = await ProvNFT.new([payee1, payee2], [50, 50])
+        this.contract = await ProvNFT.new([payee1, payee2], [1, 1])
 
         try {
           const result = await this.contract.mint(
@@ -146,7 +143,7 @@ contract('ProvNFT', accounts => {
 
     describe('Success', async function () {
       before(async function () {
-        this.contract = await ProvNFT.new([payee1, payee2], [50, 50])
+        this.contract = await ProvNFT.new([payee1, payee2], [1, 1])
         firstEmptyId = (await this.contract.getTotalSupply()).toNumber()
       })
 
@@ -296,7 +293,7 @@ contract('ProvNFT', accounts => {
 
     describe('Failure', async () => {
       it('should not allow minting if ether sent is less than the total mint price', async function () {
-        this.contract = await ProvNFT.new([payee1, payee2], [50, 50])
+        this.contract = await ProvNFT.new([payee1, payee2], [1, 1])
         mintAmount = 2
         metadataURIs = genBatchMetadataURIs(firstEmptyId, mintAmount)
 
@@ -318,7 +315,7 @@ contract('ProvNFT', accounts => {
       })
 
       it("should not allow minting if the amount and the length of the URIs list don't match", async () => {
-        this.contract = await ProvNFT.new([payee1, payee2], [50, 50])
+        this.contract = await ProvNFT.new([payee1, payee2], [1, 1])
         mintAmount = 2
         metadataURIs = ['https://example.com/token_metadata/0']
 
@@ -344,7 +341,7 @@ contract('ProvNFT', accounts => {
   describe('Image Generation', () => {
     describe('Success', async () => {
       it('should pay the AI image generation costs', async () => {
-        this.contract = await ProvNFT.new([owner], [100], { from: owner })
+        this.contract = await ProvNFT.new([owner], [1], { from: owner })
         await this.contract.imageGenerationPayment(toWei('0.5'), {
           value: toWei('0.5'),
           from: owner,
@@ -354,7 +351,7 @@ contract('ProvNFT', accounts => {
 
     describe('Failure', async () => {
       it('should revert for insufficient payment amount', async () => {
-        this.contract = await ProvNFT.new([owner], [100], { from: owner })
+        this.contract = await ProvNFT.new([owner], [1], { from: owner })
 
         try {
           await this.contract.imageGenerationPayment(toWei('0.5'), {
