@@ -14,12 +14,16 @@ contract ProvNFT is ERC1155URIStorage, ERC1155Supply, Ownable, PaymentSplitter {
     Counters.Counter private _tokenIds;
 
     uint8 constant SUPPLY_PER_ID = 1;
-    uint256 public mintPrice = 0.01 ether;
+    uint256 public mintPrice = 0.001 ether;
 
     event NFTMinted(
         address indexed owner,
         uint256 indexed tokenId,
         uint256 value
+    );
+
+    event PayFee(
+        address indexed sender
     );
 
     constructor(
@@ -45,6 +49,7 @@ contract ProvNFT is ERC1155URIStorage, ERC1155Supply, Ownable, PaymentSplitter {
             msg.value >= cost,
             'Insufficient payment amount for AI image generation'
         );
+        emit PayFee(msg.sender);
     }
 
     function mintBatch(

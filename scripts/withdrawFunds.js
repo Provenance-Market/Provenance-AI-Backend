@@ -1,7 +1,7 @@
 require('dotenv').config()
 const Web3 = require('web3')
 const HDWalletProvider = require('@truffle/hdwallet-provider')
-const abi = require('../../provenance-ai-frontend/src/abis/ProvNFT.json')
+const abi = require('../../provenace-ai-frontend/src/abis/ProvNFT.json')
 const providerUrl = `https://goerli.infura.io/v3/${process.env.INFURA_PROJECT_SECRET}`
 const web3 = new Web3(new HDWalletProvider(process.env.MNEMONIC, providerUrl))
 
