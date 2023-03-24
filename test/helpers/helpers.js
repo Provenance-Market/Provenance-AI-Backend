@@ -1,6 +1,8 @@
+const { toWei, toBN } = require('web3-utils')
+
 const calculateFee = (mintingFee, mintAmount) => {
-  const amount = new web3.utils.BN(mintAmount)
-  const fee = web3.utils.toBN(mintingFee)
+  const amount = toBN(mintAmount)
+  const fee = toBN(mintingFee)
   const totalFee = fee.mul(amount)
   return totalFee
 }
@@ -65,9 +67,20 @@ async function assertMintBatchEvent({
   expect(logIds).to.deep.equal(actualIds, 'minted token ids should be correct')
 }
 
+async function assertPayFee(contract, payer) {
+  const { logs } = await contract.imageGenerationPayment(toWei('0.5'), {
+    value: toWei('0.5'),
+    from: payer,
+  })
+
+  expect(logs[0].event).to.equal('PayFee')
+  expect(logs[0].args.sender).to.equal(payer)
+}
+
 module.exports = {
   calculateFee,
   genBatchMetadataURIs,
   assertSingleMintEvent,
   assertMintBatchEvent,
+  assertPayFee,
 }

@@ -78,6 +78,6 @@ module.exports = {
   },
   plugins: ['truffle-plugin-verify'],
   contracts_directory: './contracts/',
-  contracts_build_directory: './build/',
+  contracts_build_directory: './build/contracts/',
   migrations_directory: './migrations/',
 }

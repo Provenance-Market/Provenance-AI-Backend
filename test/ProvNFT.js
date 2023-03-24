@@ -8,12 +8,13 @@ const {
   genBatchMetadataURIs,
   assertSingleMintEvent,
   assertMintBatchEvent,
+  assertPayFee,
 } = require('./helpers/helpers.js')
 
 contract('ProvNFT', accounts => {
   const metadataBaseURI = 'https://example.com/token_metadata/'
   const [owner, payee1, payee2] = accounts
-  const mintingFee = toWei('0.01')
+  const mintingFee = toWei('0.001')
 
   describe('Deployment', () => {
     it('should deploy smart contract properly', async () => {
@@ -124,7 +125,7 @@ contract('ProvNFT', accounts => {
           const result = await this.contract.mint(
             metadataBaseURI + ++idCounter,
             {
-              value: toWei('0.001'),
+              value: toWei('0.00001'),
               from: owner,
             }
           )
@@ -342,10 +343,8 @@ contract('ProvNFT', accounts => {
     describe('Success', async () => {
       it('should pay the AI image generation costs', async () => {
         this.contract = await ProvNFT.new([owner], [1], { from: owner })
-        await this.contract.imageGenerationPayment(toWei('0.5'), {
-          value: toWei('0.5'),
-          from: owner,
-        })
+
+        await assertPayFee(this.contract, owner)
       })
     })
 
