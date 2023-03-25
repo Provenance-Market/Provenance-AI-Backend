@@ -20,7 +20,7 @@ contract ProvNFT is
 
     uint8 constant SUPPLY_PER_ID = 1;
     uint256 public mintPrice = 0.001 ether;
-    address[] pausers;
+    address[] public pausers;
 
     event NFTMinted(
         address indexed owner,
@@ -38,10 +38,15 @@ contract ProvNFT is
     }
 
     modifier onlyPauser() {
-        uint256 length = pausers.length;
-        for (uint256 p = 0; p < length; p++) {
-            require(pausers[p] == msg.sender, 'Caller has to be a pauser');
+        bool isPauser = false;
+        uint256 numPausers = pausers.length;
+        for (uint256 p = 0; p < numPausers; p++) {
+            if (msg.sender == pausers[p]) {
+                isPauser = true;
+                break;
+            }
         }
+        require(isPauser, 'Caller has to be a pauser');
         _;
     }
 
