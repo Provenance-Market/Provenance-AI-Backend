@@ -373,16 +373,18 @@ contract('ProvNFT', accounts => {
 
   describe('Image Generation', () => {
     describe('Success', async () => {
-      it('should pay the AI image generation costs', async () => {
+      it('should pay the AI image generation costs', async function () {
         this.contract = await ProvNFT.new([owner], [1], { from: owner })
         await assertPayFee(this.contract, owner)
       })
     })
 
     describe('Failure', async () => {
-      it('should revert for insufficient payment amount', async () => {
-        this.contract = await ProvNFT.new([owner], [1], { from: owner })
+      before(async function () {
+        this.contract = await ProvNFT.new([owner, payee1, payee2], [1, 1, 1])
+      })
 
+      it('should revert for insufficient payment amount', async function () {
         try {
           await this.contract.imageGenerationPayment(toWei('0.5'), {
             value: toWei('0.4'),
@@ -394,6 +396,17 @@ contract('ProvNFT', accounts => {
             'revert Insufficient payment amount for AI image generation'
           )
         }
+      })
+
+      it('should revert when contract is paused', async function () {
+        await this.contract.pause({ from: payee2 })
+        await truffleAssert.reverts(
+          this.contract.imageGenerationPayment(toWei('0.5'), {
+            value: toWei('0.5'),
+            from: payee2,
+          }),
+          'Pausable: paused'
+        )
       })
     })
   })

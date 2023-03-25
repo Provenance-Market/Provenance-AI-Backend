@@ -63,7 +63,7 @@ contract ProvNFT is
         return newItemId;
     }
 
-    function imageGenerationPayment(uint256 cost) public payable {
+    function imageGenerationPayment(uint256 cost) public payable whenNotPaused {
         require(
             msg.value >= cost,
             'Insufficient payment amount for AI image generation'
