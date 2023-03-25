@@ -4,12 +4,19 @@ pragma solidity ^0.8.9;
 import '@openzeppelin/contracts/token/ERC1155/extensions/ERC1155URIStorage.sol';
 import '@openzeppelin/contracts/token/ERC1155/extensions/ERC1155Supply.sol';
 import '@openzeppelin/contracts/access/Ownable.sol';
+import '@openzeppelin/contracts/security/Pausable.sol';
 import '@openzeppelin/contracts/utils/Counters.sol';
 import '@openzeppelin/contracts/finance/PaymentSplitter.sol';
 import '@ganache/console.log/console.sol';
 
 /// @custom:security-contact ProvenanceMarket.art@proton.me
-contract ProvNFT is ERC1155URIStorage, ERC1155Supply, Ownable, PaymentSplitter {
+contract ProvNFT is
+    ERC1155URIStorage,
+    ERC1155Supply,
+    Ownable,
+    Pausable,
+    PaymentSplitter
+{
     using Counters for Counters.Counter;
     Counters.Counter private _tokenIds;
 
@@ -22,9 +29,7 @@ contract ProvNFT is ERC1155URIStorage, ERC1155Supply, Ownable, PaymentSplitter {
         uint256 value
     );
 
-    event PayFee(
-        address indexed sender
-    );
+    event PayFee(address indexed sender);
 
     constructor(
         address[] memory _payees,
@@ -91,6 +96,14 @@ contract ProvNFT is ERC1155URIStorage, ERC1155Supply, Ownable, PaymentSplitter {
         return _tokenIds.current();
     }
 
+    function pause() public onlyOwner {
+        _pause();
+    }
+
+    function unpause() public onlyOwner {
+        _unpause();
+    }
+
     // The following functions are overrides required by Solidity.
 
     function _beforeTokenTransfer(
@@ -100,7 +113,7 @@ contract ProvNFT is ERC1155URIStorage, ERC1155Supply, Ownable, PaymentSplitter {
         uint256[] memory ids,
         uint256[] memory amounts,
         bytes memory data
-    ) internal override(ERC1155, ERC1155Supply) {
+    ) internal override(ERC1155, ERC1155Supply) whenNotPaused {
         super._beforeTokenTransfer(operator, from, to, ids, amounts, data);
     }
 
