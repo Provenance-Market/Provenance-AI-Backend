@@ -3,7 +3,6 @@ pragma solidity ^0.8.9;
 
 import '@openzeppelin/contracts/token/ERC1155/extensions/ERC1155URIStorage.sol';
 import '@openzeppelin/contracts/token/ERC1155/extensions/ERC1155Supply.sol';
-import '@openzeppelin/contracts/access/Ownable.sol';
 import '@openzeppelin/contracts/security/Pausable.sol';
 import '@openzeppelin/contracts/utils/Counters.sol';
 import '@openzeppelin/contracts/finance/PaymentSplitter.sol';
@@ -13,7 +12,6 @@ import '@ganache/console.log/console.sol';
 contract ProvNFT is
     ERC1155URIStorage,
     ERC1155Supply,
-    Ownable,
     Pausable,
     PaymentSplitter
 {
@@ -22,6 +20,7 @@ contract ProvNFT is
 
     uint8 constant SUPPLY_PER_ID = 1;
     uint256 public mintPrice = 0.001 ether;
+    address[] pausers;
 
     event NFTMinted(
         address indexed owner,
@@ -34,7 +33,17 @@ contract ProvNFT is
     constructor(
         address[] memory _payees,
         uint256[] memory _shares
-    ) ERC1155('') PaymentSplitter(_payees, _shares) {}
+    ) ERC1155('') PaymentSplitter(_payees, _shares) {
+        pausers = _payees;
+    }
+
+    modifier onlyPauser() {
+        uint256 length = pausers.length;
+        for (uint256 p = 0; p < length; p++) {
+            require(pausers[p] == msg.sender, 'Caller has to be a pauser');
+        }
+        _;
+    }
 
     function mint(string memory metadataURI) public payable returns (uint256) {
         require(msg.value >= mintPrice, 'Invalid ether amount for minting');
@@ -96,11 +105,11 @@ contract ProvNFT is
         return _tokenIds.current();
     }
 
-    function pause() public onlyOwner {
+    function pause() public onlyPauser {
         _pause();
     }
 
-    function unpause() public onlyOwner {
+    function unpause() public onlyPauser {
         _unpause();
     }
 
