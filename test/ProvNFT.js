@@ -3,6 +3,7 @@ const BN = require('bn.js')
 const { toWei, toBN } = require('web3-utils')
 const chai = require('chai')
 const expect = chai.use(require('chai-bn')(BN)).expect
+const truffleAssert = require('truffle-assertions')
 const {
   calculateFee,
   genBatchMetadataURIs,
@@ -117,10 +118,12 @@ contract('ProvNFT', accounts => {
       })
     })
 
-    describe('Failure', async () => {
-      it('should not allow minting if ether sent is less than the total mint price', async function () {
-        this.contract = await ProvNFT.new([payee1, payee2], [1, 1])
+    describe('Failure', async function () {
+      before(async function () {
+        this.contract = await ProvNFT.new([owner, payee1, payee2], [1, 1, 1])
+      })
 
+      it('should not allow minting if ether sent is less than the total mint price', async function () {
         try {
           const result = await this.contract.mint(
             metadataBaseURI + ++idCounter,
@@ -135,6 +138,18 @@ contract('ProvNFT', accounts => {
             'revert Invalid ether amount for minting'
           )
         }
+      })
+
+      it('should not mint when contract is paused', async function () {
+        await this.contract.pause({ from: payee1 })
+
+        await truffleAssert.reverts(
+          this.contract.mint(metadataBaseURI + ++idCounter, {
+            from: owner,
+            value: toWei('0.001'),
+          }),
+          'Pausable: paused'
+        )
       })
     })
   })
@@ -293,8 +308,11 @@ contract('ProvNFT', accounts => {
     })
 
     describe('Failure', async () => {
-      it('should not allow minting if ether sent is less than the total mint price', async function () {
+      before(async function () {
         this.contract = await ProvNFT.new([payee1, payee2], [1, 1])
+      })
+
+      it('should not allow minting if ether sent is less than the total mint price', async function () {
         mintAmount = 2
         metadataURIs = genBatchMetadataURIs(firstEmptyId, mintAmount)
 
@@ -315,8 +333,7 @@ contract('ProvNFT', accounts => {
         }
       })
 
-      it("should not allow minting if the amount and the length of the URIs list don't match", async () => {
-        this.contract = await ProvNFT.new([payee1, payee2], [1, 1])
+      it("should not allow minting if the amount and the length of the URIs list don't match", async function () {
         mintAmount = 2
         metadataURIs = ['https://example.com/token_metadata/0']
 
@@ -336,22 +353,38 @@ contract('ProvNFT', accounts => {
           )
         }
       })
+
+      it('should not mint when contract is paused', async function () {
+        firstEmptyId = (await this.contract.getTotalSupply()).toNumber()
+        mintAmount = 3
+        metadataURIs = genBatchMetadataURIs(firstEmptyId, mintAmount)
+        await this.contract.pause({ from: payee2 })
+
+        await truffleAssert.reverts(
+          this.contract.mintBatch(mintAmount, metadataURIs, {
+            value: calculateFee(mintingFee, mintAmount),
+            from: payee2,
+          }),
+          'Pausable: paused'
+        )
+      })
     })
   })
 
   describe('Image Generation', () => {
     describe('Success', async () => {
-      it('should pay the AI image generation costs', async () => {
+      it('should pay the AI image generation costs', async function () {
         this.contract = await ProvNFT.new([owner], [1], { from: owner })
-
         await assertPayFee(this.contract, owner)
       })
     })
 
     describe('Failure', async () => {
-      it('should revert for insufficient payment amount', async () => {
-        this.contract = await ProvNFT.new([owner], [1], { from: owner })
+      before(async function () {
+        this.contract = await ProvNFT.new([owner, payee1, payee2], [1, 1, 1])
+      })
 
+      it('should revert for insufficient payment amount', async function () {
         try {
           await this.contract.imageGenerationPayment(toWei('0.5'), {
             value: toWei('0.4'),
@@ -363,6 +396,17 @@ contract('ProvNFT', accounts => {
             'revert Insufficient payment amount for AI image generation'
           )
         }
+      })
+
+      it('should revert when contract is paused', async function () {
+        await this.contract.pause({ from: payee2 })
+        await truffleAssert.reverts(
+          this.contract.imageGenerationPayment(toWei('0.5'), {
+            value: toWei('0.5'),
+            from: payee2,
+          }),
+          'Pausable: paused'
+        )
       })
     })
   })
