@@ -5,22 +5,17 @@ import '@openzeppelin/contracts/token/ERC1155/extensions/ERC1155URIStorage.sol';
 import '@openzeppelin/contracts/token/ERC1155/extensions/ERC1155Supply.sol';
 import '@openzeppelin/contracts/security/Pausable.sol';
 import '@openzeppelin/contracts/utils/Counters.sol';
-import '@openzeppelin/contracts/finance/PaymentSplitter.sol';
+import '@gnosis.pm/safe-contracts/contracts/GnosisSafe.sol';
 import '@ganache/console.log/console.sol';
 
 /// @custom:security-contact ProvenanceMarket.art@proton.me
-contract ProvNFT is
-    ERC1155URIStorage,
-    ERC1155Supply,
-    Pausable,
-    PaymentSplitter
-{
+contract ProvNFT is ERC1155URIStorage, ERC1155Supply, Pausable, GnosisSafe {
     using Counters for Counters.Counter;
     Counters.Counter private _tokenIds;
 
+    GnosisSafe public gnosisSafe;
     uint8 constant SUPPLY_PER_ID = 1;
-    uint256 public mintPrice = 0.001 ether;
-    address[] public pausers;
+    uint256 public mintPrice;
 
     event NFTMinted(
         address indexed owner,
@@ -30,23 +25,22 @@ contract ProvNFT is
 
     event PayFee(address indexed sender);
 
-    constructor(
-        address[] memory _payees,
-        uint256[] memory _shares
-    ) ERC1155('') PaymentSplitter(_payees, _shares) {
-        pausers = _payees;
+    constructor(address payable _multisig, uint256 _mintFee) ERC1155('') {
+        gnosisSafe = GnosisSafe(_multisig);
+        mintPrice = _mintFee;
     }
 
-    modifier onlyPauser() {
-        bool isPauser = false;
-        uint256 numPausers = pausers.length;
-        for (uint256 p = 0; p < numPausers; p++) {
-            if (msg.sender == pausers[p]) {
-                isPauser = true;
+    modifier onlyOwners() {
+        bool isOwner = false;
+        address[] memory walletOwners = gnosisSafe.getOwners();
+        uint256 numOwners = walletOwners.length;
+        for (uint256 i = 0; i < numOwners; i++) {
+            if (msg.sender == walletOwners[i]) {
+                isOwner = true;
                 break;
             }
         }
-        require(isPauser, 'Caller has to be a pauser');
+        require(isOwner, 'Caller has to be an owner');
         _;
     }
 
@@ -110,11 +104,17 @@ contract ProvNFT is
         return _tokenIds.current();
     }
 
-    function pause() public onlyPauser {
+    // Owners' functions
+
+    function setMintFee(uint256 _newMintFee) public onlyOwners {
+        mintPrice = _newMintFee;
+    }
+
+    function pause() public onlyOwners {
         _pause();
     }
 
-    function unpause() public onlyPauser {
+    function unpause() public onlyOwners {
         _unpause();
     }
 
