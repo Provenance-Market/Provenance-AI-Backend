@@ -11,11 +11,11 @@ import '@ganache/console.log/console.sol';
 /// @custom:security-contact ProvenanceMarket.art@proton.me
 contract ProvNFT is ERC1155URIStorage, ERC1155Supply, Pausable, GnosisSafe {
     using Counters for Counters.Counter;
-    Counters.Counter private _tokenIds;
-
     GnosisSafe public gnosisSafe;
-    uint8 constant SUPPLY_PER_ID = 1;
+
+    Counters.Counter private _tokenIds;
     uint256 public mintPrice;
+    uint8 constant SUPPLY_PER_ID = 1;
 
     event NFTMinted(
         address indexed owner,
