@@ -12,19 +12,76 @@ const {
   assertPayFee,
 } = require('./helpers/helpers.js')
 
+const GnosisSafe = artifacts.require('GnosisSafe')
+
 contract('ProvNFT', accounts => {
   const metadataBaseURI = 'https://example.com/token_metadata/'
-  const [owner, payee1, payee2] = accounts
+  const [owner1, owner2, owner3] = accounts
   const mintingFee = toWei('0.001')
 
   describe('Deployment', () => {
+    let gnosisSafe
+
+    before(async () => {
+      const {
+        abi: gnosisSafeProxyABI,
+      } = require('@gnosis.pm/safe-contracts/build/contracts/GnosisSafeProxy.json')
+      const {
+        abi: gnosisSafeABI,
+      } = require('@gnosis.pm/safe-contracts/build/contracts/GnosisSafe.json')
+
+      // Get the deployment bytecode for the GnosisSafeProxy contract
+      const gnosisSafeProxyBytecode =
+        require('@gnosis.pm/safe-contracts/build/contracts/GnosisSafeProxy.json').deployedBytecode
+
+      // Deploy the GnosisSafeProxy contract
+      const GnosisSafeProxy = new web3.eth.Contract(gnosisSafeProxyABI)
+      const gnosisSafeProxy = await GnosisSafeProxy.deploy({
+        data: gnosisSafeProxyBytecode,
+      }).send({ from: owner, gas: '8000000' })
+      const gnosisSafeProxyAddress = gnosisSafeProxy.options.address
+
+      // Retrieve the address of the GnosisSafe contract
+      const gnosisSafeAddress = await gnosisSafeProxy.methods.getSafe().call()
+
+      // Create an instance of the GnosisSafe contract
+      GnosisSafe = new web3.eth.Contract(gnosisSafeABI, gnosisSafeAddress)
+    })
+
     it('should deploy smart contract properly', async () => {
-      const provNFT = await ProvNFT.deployed([owner, payee1, payee2], [1, 1, 1])
+      const provNFT = await ProvNFT.deployed(
+        '0xfDfB91D5a718650faD0f6e12524A4fB95B368Bb4',
+        mintingFee
+      )
       assert(provNFT.address !== '')
     })
 
-    it('should have mintPrice equal to 0.01 ether', async function () {
-      this.contract = await ProvNFT.new([owner], [1], { from: owner })
+    it('should deploy and initialize the contract with the correct owners', async () => {
+      const owners = [owner1, owner2, owner3]
+      const threshold = 2 // for a 2/3 multisig
+
+      const gnosisSafe = await GnosisSafe.new(owners, threshold)
+      const deployedowners = await gnosisSafe.getowners()
+      const deployedThreshold = await gnosisSafe.getThreshold()
+
+      assert.deepEqual(
+        deployedowners,
+        owners,
+        'owners not initialized correctly'
+      )
+      assert.equal(
+        deployedThreshold,
+        threshold,
+        'Threshold not initialized correctly'
+      )
+    })
+
+    it('should set minting fee', async function () {
+      this.contract = await ProvNFT.new(
+        '0xfDfB91D5a718650faD0f6e12524A4fB95B368Bb4',
+        mintingFee,
+        { from: owner1 }
+      )
       const actualMintPrice = await this.contract.mintPrice()
 
       assert.equal(
@@ -41,11 +98,15 @@ contract('ProvNFT', accounts => {
 
     describe('Success', async () => {
       before(async function () {
-        this.contract = await ProvNFT.new([payee1, payee2], [1, 1])
+        this.contract = await ProvNFT.new(
+          '0xfDfB91D5a718650faD0f6e12524A4fB95B368Bb4',
+          mintingFee,
+          { from: owner1 }
+        )
 
         result = await this.contract.mint(metadataBaseURI + ++idCounter, {
           value: mintingFee,
-          from: owner,
+          from: owner1,
         })
       })
 
@@ -55,7 +116,7 @@ contract('ProvNFT', accounts => {
         expect(result.logs[0].event).to.equal('TransferSingle')
         expect(result.logs[0].args.id.toNumber()).to.equal(0)
         expect(result.logs[0].args.value.toNumber()).to.equal(1)
-        expect(result.logs[0].args.to).to.equal(owner)
+        expect(result.logs[0].args.to).to.equal(owner1)
         expect(result.logs[0].args.from).to.equal(
           '0x0000000000000000000000000000000000000000'
         )
@@ -77,7 +138,7 @@ contract('ProvNFT', accounts => {
           this.contract,
           metadataBaseURI,
           ++idCounter,
-          owner,
+          owner1,
           mintingFee
         )
       })
@@ -87,21 +148,21 @@ contract('ProvNFT', accounts => {
           this.contract,
           metadataBaseURI,
           ++idCounter,
-          payee1,
+          owner2,
           mintingFee
         )
       })
 
       it("should update the minter's ether balance", async function () {
-        const amountBeforeMint = new BN(await web3.eth.getBalance(payee1))
+        const amountBeforeMint = new BN(await web3.eth.getBalance(owner2))
         result = await this.contract.mint(metadataBaseURI + ++idCounter, {
           value: mintingFee,
-          from: payee1,
+          from: owner2,
         })
         const gasUsed = new BN(result.receipt.gasUsed)
         const gasPrice = new BN(await web3.eth.getGasPrice())
         const txCost = gasUsed.mul(gasPrice)
-        const amountAfterMint = new BN(await web3.eth.getBalance(payee1))
+        const amountAfterMint = new BN(await web3.eth.getBalance(owner2))
         const expectedAmount = amountBeforeMint
           .sub(toBN(mintingFee))
           .sub(toBN(txCost))
@@ -119,8 +180,19 @@ contract('ProvNFT', accounts => {
     })
 
     describe('Failure', async function () {
+      let nftContract
+      let gnosisSafe
+
       before(async function () {
-        this.contract = await ProvNFT.new([owner, payee1, payee2], [1, 1, 1])
+        gnosisSafe = await GnosisSafe.new(
+          [accounts[0], accounts[1], accounts[2]],
+          1,
+          '0x',
+          '0x',
+          '0x',
+          '0x'
+        )
+        nftContract = await ProvNFT.new(gnosisSafe.address, mintingFee)
       })
 
       it('should not allow minting if ether sent is less than the total mint price', async function () {
@@ -129,7 +201,7 @@ contract('ProvNFT', accounts => {
             metadataBaseURI + ++idCounter,
             {
               value: toWei('0.00001'),
-              from: owner,
+              from: owner1,
             }
           )
           expect.fail('Expected transaction to be reverted')
@@ -141,11 +213,18 @@ contract('ProvNFT', accounts => {
       })
 
       it('should not mint when contract is paused', async function () {
-        await this.contract.pause({ from: payee1 })
+        const walletOwners = await gnosisSafe.getOwners()
+        const pauseCaller = walletOwners[0] // select the first owner
+
+        try {
+          await this.contract.pause({ from: pauseCaller })
+        } catch (err) {
+          console.error(err)
+        }
 
         await truffleAssert.reverts(
           this.contract.mint(metadataBaseURI + ++idCounter, {
-            from: owner,
+            from: pauseCaller,
             value: toWei('0.001'),
           }),
           'Pausable: paused'
@@ -159,14 +238,14 @@ contract('ProvNFT', accounts => {
 
     describe('Success', async function () {
       before(async function () {
-        this.contract = await ProvNFT.new([payee1, payee2], [1, 1])
+        this.contract = await ProvNFT.new([owner2, owner3], [1, 1])
         firstEmptyId = (await this.contract.getTotalSupply()).toNumber()
       })
 
       it('should allow minting of multiple new NFTs', async function () {
         await assertMintBatchEvent({
           contract: this.contract,
-          to: owner,
+          to: owner1,
           fee: mintingFee,
           mintAmount: 2,
           startingId: firstEmptyId,
@@ -183,7 +262,7 @@ contract('ProvNFT', accounts => {
           metadataURIs,
           {
             value: calculateFee(mintingFee, mintAmount),
-            from: owner,
+            from: owner1,
           }
         )
 
@@ -207,7 +286,7 @@ contract('ProvNFT', accounts => {
 
         await assertMintBatchEvent({
           contract: this.contract,
-          to: owner,
+          to: owner1,
           fee: mintingFee,
           mintAmount: 3,
           startingId: firstEmptyId,
@@ -219,7 +298,7 @@ contract('ProvNFT', accounts => {
 
         await assertMintBatchEvent({
           contract: this.contract,
-          to: payee2,
+          to: owner3,
           fee: mintingFee,
           mintAmount: 2,
           startingId: firstEmptyId,
@@ -227,20 +306,20 @@ contract('ProvNFT', accounts => {
       })
 
       it("should update the minter's ether balance", async function () {
-        const amountBeforeMint = new BN(await web3.eth.getBalance(payee2))
+        const amountBeforeMint = new BN(await web3.eth.getBalance(owner3))
         mintAmount = 2
 
         firstEmptyId = (await this.contract.getTotalSupply()).toNumber()
         let metadataURIs = genBatchMetadataURIs(firstEmptyId, 2)
         result = await this.contract.mintBatch(mintAmount, metadataURIs, {
           value: calculateFee(mintingFee, mintAmount),
-          from: payee2,
+          from: owner3,
         })
 
         const gasUsed = new BN(result.receipt.gasUsed)
         const gasPrice = new BN(await web3.eth.getGasPrice())
         const txCost = gasUsed.mul(gasPrice)
-        const amountAfterMint = new BN(await web3.eth.getBalance(payee2))
+        const amountAfterMint = new BN(await web3.eth.getBalance(owner3))
         const expectedAmount = amountBeforeMint
           .sub(toBN(mintingFee))
           .sub(toBN(txCost))
@@ -263,42 +342,42 @@ contract('ProvNFT', accounts => {
         // Get the total shares held by all the payees
         const totalShares = new BN(await this.contract.totalShares())
 
-        // Get the balances of payee1 & payee2 in the contract before the minting operation
+        // Get the balances of owner2 & owner3 in the contract before the minting operation
         const balanceBeforeMint1 = new BN(
-          await this.contract.releasable(payee1)
+          await this.contract.releasable(owner2)
         )
         const balanceBeforeMint2 = new BN(
-          await this.contract.releasable(payee2)
+          await this.contract.releasable(owner3)
         )
 
         // Mint new tokens
         await assertMintBatchEvent({
           contract: this.contract,
-          to: owner,
+          to: owner1,
           fee: mintingFee,
           mintAmount,
           startingId: firstEmptyId,
         })
 
-        // Get the balances of payee1 & payee2 in the contract after the minting operation
-        const balanceAfterMint1 = new BN(await this.contract.releasable(payee1))
-        const balanceAfterMint2 = new BN(await this.contract.releasable(payee2))
+        // Get the balances of owner2 & owner3 in the contract after the minting operation
+        const balanceAfterMint1 = new BN(await this.contract.releasable(owner2))
+        const balanceAfterMint2 = new BN(await this.contract.releasable(owner3))
 
-        // Get the balances of payee1 and payee2 on the contract after the minting operation
-        const payee1Shares = new BN(await this.contract.shares(payee1))
-        const payee2Shares = new BN(await this.contract.shares(payee2))
+        // Get the balances of owner2 and owner3 on the contract after the minting operation
+        const owner2Shares = new BN(await this.contract.shares(owner2))
+        const owner3Shares = new BN(await this.contract.shares(owner3))
 
-        // Calculate the expected balances of payee1 and payee2 after the minting operation
+        // Calculate the expected balances of owner2 and owner3 after the minting operation
         const expectedBalance1 = balanceBeforeMint1.add(
           toBN(mintingFee)
             .mul(toBN(mintAmount))
-            .mul(payee1Shares)
+            .mul(owner2Shares)
             .div(totalShares)
         )
         const expectedBalance2 = balanceBeforeMint2.add(
           toBN(mintingFee)
             .mul(toBN(mintAmount))
-            .mul(payee2Shares)
+            .mul(owner3Shares)
             .div(totalShares)
         )
 
@@ -309,7 +388,7 @@ contract('ProvNFT', accounts => {
 
     describe('Failure', async () => {
       before(async function () {
-        this.contract = await ProvNFT.new([payee1, payee2], [1, 1])
+        this.contract = await ProvNFT.new([owner2, owner3], [1, 1])
       })
 
       it('should not allow minting if ether sent is less than the total mint price', async function () {
@@ -322,7 +401,7 @@ contract('ProvNFT', accounts => {
             metadataURIs,
             {
               value: toWei('0.001'),
-              from: payee1,
+              from: owner2,
             }
           )
           expect.fail('Expected transaction to be reverted')
@@ -343,7 +422,7 @@ contract('ProvNFT', accounts => {
             metadataURIs,
             {
               value: mintingFee,
-              from: payee2,
+              from: owner3,
             }
           )
           expect.fail('Expected transaction to be reverted')
@@ -358,12 +437,12 @@ contract('ProvNFT', accounts => {
         firstEmptyId = (await this.contract.getTotalSupply()).toNumber()
         mintAmount = 3
         metadataURIs = genBatchMetadataURIs(firstEmptyId, mintAmount)
-        await this.contract.pause({ from: payee2 })
+        await this.contract.pause({ from: owner3 })
 
         await truffleAssert.reverts(
           this.contract.mintBatch(mintAmount, metadataURIs, {
             value: calculateFee(mintingFee, mintAmount),
-            from: payee2,
+            from: owner3,
           }),
           'Pausable: paused'
         )
@@ -374,21 +453,21 @@ contract('ProvNFT', accounts => {
   describe('Image Generation', () => {
     describe('Success', async () => {
       it('should pay the AI image generation costs', async function () {
-        this.contract = await ProvNFT.new([owner], [1], { from: owner })
-        await assertPayFee(this.contract, owner)
+        this.contract = await ProvNFT.new([owner1], [1], { from: owner1 })
+        await assertPayFee(this.contract, owner1)
       })
     })
 
     describe('Failure', async () => {
       before(async function () {
-        this.contract = await ProvNFT.new([owner, payee1, payee2], [1, 1, 1])
+        this.contract = await ProvNFT.new([owner1, owner2, owner3], [1, 1, 1])
       })
 
       it('should revert for insufficient payment amount', async function () {
         try {
           await this.contract.imageGenerationPayment(toWei('0.5'), {
             value: toWei('0.4'),
-            from: owner,
+            from: owner1,
           })
           expect.fail('Expected transaction to be reverted')
         } catch (error) {
@@ -399,11 +478,11 @@ contract('ProvNFT', accounts => {
       })
 
       it('should revert when contract is paused', async function () {
-        await this.contract.pause({ from: payee2 })
+        await this.contract.pause({ from: owner3 })
         await truffleAssert.reverts(
           this.contract.imageGenerationPayment(toWei('0.5'), {
             value: toWei('0.5'),
-            from: payee2,
+            from: owner3,
           }),
           'Pausable: paused'
         )
