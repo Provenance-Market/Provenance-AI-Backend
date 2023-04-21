@@ -12,7 +12,10 @@ const {
   assertPayFee,
 } = require('./helpers/helpers.js')
 
-const GnosisSafe = artifacts.require('GnosisSafe')
+const { GnosisSafe: GnosisSafeContract } = artifacts.require(
+  '@gnosis.pm/safe-contracts'
+)
+// const GnosisSafe = artifacts.require('GnosisSafe')
 
 contract('ProvNFT', accounts => {
   const metadataBaseURI = 'https://example.com/token_metadata/'
@@ -20,34 +23,6 @@ contract('ProvNFT', accounts => {
   const mintingFee = toWei('0.001')
 
   describe('Deployment', () => {
-    let gnosisSafe
-
-    before(async () => {
-      const {
-        abi: gnosisSafeProxyABI,
-      } = require('@gnosis.pm/safe-contracts/build/contracts/GnosisSafeProxy.json')
-      const {
-        abi: gnosisSafeABI,
-      } = require('@gnosis.pm/safe-contracts/build/contracts/GnosisSafe.json')
-
-      // Get the deployment bytecode for the GnosisSafeProxy contract
-      const gnosisSafeProxyBytecode =
-        require('@gnosis.pm/safe-contracts/build/contracts/GnosisSafeProxy.json').deployedBytecode
-
-      // Deploy the GnosisSafeProxy contract
-      const GnosisSafeProxy = new web3.eth.Contract(gnosisSafeProxyABI)
-      const gnosisSafeProxy = await GnosisSafeProxy.deploy({
-        data: gnosisSafeProxyBytecode,
-      }).send({ from: owner, gas: '8000000' })
-      const gnosisSafeProxyAddress = gnosisSafeProxy.options.address
-
-      // Retrieve the address of the GnosisSafe contract
-      const gnosisSafeAddress = await gnosisSafeProxy.methods.getSafe().call()
-
-      // Create an instance of the GnosisSafe contract
-      GnosisSafe = new web3.eth.Contract(gnosisSafeABI, gnosisSafeAddress)
-    })
-
     it('should deploy smart contract properly', async () => {
       const provNFT = await ProvNFT.deployed(
         '0xfDfB91D5a718650faD0f6e12524A4fB95B368Bb4',
@@ -56,12 +31,64 @@ contract('ProvNFT', accounts => {
       assert(provNFT.address !== '')
     })
 
+    it('gnosisSafe', async () => {
+      let gnosisSafe
+
+      before(async () => {
+        const owners = [accounts[0], accounts[1]]
+        const threshold = 2
+        const gnosisSafeContract = await GnosisSafeContract.new()
+        gnosisSafe = await gnosisSafeContract.setup(
+          owners,
+          threshold,
+          '0x',
+          0,
+          '0x',
+          0,
+          '0x',
+          { from: accounts[0] }
+        )
+      })
+    })
+
     it('should deploy and initialize the contract with the correct owners', async () => {
       const owners = [owner1, owner2, owner3]
       const threshold = 2 // for a 2/3 multisig
 
-      const gnosisSafe = await GnosisSafe.new(owners, threshold)
-      const deployedowners = await gnosisSafe.getowners()
+      const gnosisSafe = await GnosisSafe.new(
+        owners,
+        threshold,
+        'Test Safe',
+        '0.0.1',
+        {
+          from: owner1,
+        }
+      )
+
+      // Set up the multisig wallet with two owners and a signature threshold of 2
+      const to = gnosisSafe.address
+      console.log(to)
+      const data = '0x'
+      const fallbackHandler = '0x0000000000000000000000000000000000000000'
+      const paymentToken = '0x0000000000000000000000000000000000000000'
+      const payment = 0
+      const paymentReceiver = '0x0000000000000000000000000000000000000000'
+
+      await gnosisSafe.addOwnerWithThreshold(owner1, 1)
+      console.log('here')
+
+      await gnosisSafe.setup(
+        owners,
+        threshold,
+        to,
+        data,
+        fallbackHandler,
+        paymentToken,
+        payment,
+        paymentReceiver
+      )
+
+      const deployedowners = await gnosisSafe.getOwners()
       const deployedThreshold = await gnosisSafe.getThreshold()
 
       assert.deepEqual(
