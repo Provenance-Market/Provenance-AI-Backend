@@ -10,7 +10,7 @@
   "scripts": {
     "prettier": "npx prettier --write 'contracts/*.sol'",
     "lint": "npx prettier --list-different 'contracts/*.sol'",
-    "node": "ganache --chain.chainId 1337 -p 8545 -a 20 -e 10000 -m 'egg cannon figure ketchup fall issue never share online shiver chief album'"
+    "node": "ganache --chain.chainId 1337 -p 8545 -a 20 -e 10000 -g 20000000000 -m 'egg cannon figure ketchup fall issue never share online shiver chief album'"
   },
   "author": "Ed-Marcavage, aaronjan98, Rohith09",
   "license": "MIT",

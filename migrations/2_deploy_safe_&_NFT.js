@@ -1,43 +1,41 @@
 const NFT = artifacts.require('ProvNFT')
 const GnosisSafe = artifacts.require('GnosisSafe')
-const { toWei, padLeft } = require('web3-utils')
+const { toWei } = require('web3-utils')
 
-module.exports = async function (deployer, network, accounts) {
-  const ADDRESS_ZERO = padLeft(0x0, 40)
-
-  // Deploy the Gnosis Safe contract
-  await deployer.deploy(GnosisSafe)
-
-  // Create an instance of the Gnosis Safe contract
-  const gnosisSafeInstance = await GnosisSafe.new()
-
-  // Set the initial owners and threshold for the multisig wallet
-  const owners = [accounts[0], accounts[1], accounts[2]]
-  const threshold = 2
-
+module.exports = async function (deployer, _network, [owner, ..._]) {
   try {
-    let receipt = await gnosisSafeInstance.setup(
-      owners,
-      threshold,
-      ADDRESS_ZERO,
-      '0x',
-      ADDRESS_ZERO,
-      ADDRESS_ZERO,
-      0,
-      ADDRESS_ZERO
+    // Deploy the Gnosis Safe contract
+    const gnosisSafe = await GnosisSafe.new({ from: owner })
+
+    // Deploy the ProvNFT contract with the Gnosis Safe contract address
+    await deployer.deploy(NFT, gnosisSafe.address, toWei('0.001', 'ether'))
+
+    // Add the owner to the Gnosis Safe contract
+    await gnosisSafe.addOwnerWithThreshold(owner, 1)
+
+    // Verify signature
+    const contractAddress = NFT.address
+    const nonce = await web3.eth.getTransactionCount(owner)
+    const data = gnosisSafe.contract.methods
+      .addOwnerWithThreshold(owner, 1)
+      .encodeABI()
+    const chainId = await web3.eth.getChainId()
+    const message = {
+      from: owner,
+      to: contractAddress,
+      value: '0',
+      gas: 3000000,
+      gasPrice: '20000000000', // 20 gwei
+      nonce: nonce,
+      data: data,
+      chainId: chainId,
+    }
+    const signedMessage = await web3.eth.accounts.sign(
+      JSON.stringify(message),
+      '0xb3e1d11b9b95f6dc1b2581da3f2e1fcc1cdc756defd6d3991ec18825d75b1173'
     )
-    await receipt.wait()
-    console.log('Transaction hash:', receipt.transactionHash)
-    console.log('Block number:', receipt.blockNumber)
-    console.log('Gas used:', receipt.gasUsed)
+    console.log('Signature:', signedMessage.signature)
   } catch (error) {
-    console.log('Error:', error)
+    console.log(error)
   }
-
-  // Retrieve the address of the Gnosis Safe contract
-  const gnosisSafeAddress = gnosisSafeInstance.address
-  console.log('gnosis safe address: ', gnosisSafeAddress)
-
-  // Deploy the NFT contract and pass the Gnosis Safe address and minting fee as constructor arguments
-  await deployer.deploy(NFT, gnosisSafeAddress, toWei('0.001', 'ether'))
 }
