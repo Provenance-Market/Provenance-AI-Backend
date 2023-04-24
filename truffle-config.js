@@ -43,7 +43,7 @@ module.exports = {
       skipDryRun: true,
     },
     polygon_mainnet: {
-      provider: () => new HDWalletProvider(mnemonic, infuraPolygonURL),
+      provider: () => new HDWalletProvider(MNEMONIC, infuraPolygonURL),
       network_id: 137,
       gas: 8000000,
       gasPrice: 20000000000,

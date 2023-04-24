@@ -12,10 +12,7 @@ const {
   assertPayFee,
 } = require('./helpers/helpers.js')
 
-const { GnosisSafe: GnosisSafeContract } = artifacts.require(
-  '@gnosis.pm/safe-contracts'
-)
-// const GnosisSafe = artifacts.require('GnosisSafe')
+const GnosisSafe = artifacts.require('GnosisSafe')
 
 contract('ProvNFT', accounts => {
   const metadataBaseURI = 'https://example.com/token_metadata/'
