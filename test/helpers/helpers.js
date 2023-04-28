@@ -1,4 +1,7 @@
-const { toWei, toBN } = require('web3-utils')
+const { expect } = require('chai')
+const { ethers } = require('hardhat')
+
+const { toBN } = ethers.BigNumber
 
 const calculateFee = (mintingFee, mintAmount) => {
   const amount = toBN(mintAmount)
@@ -22,16 +25,16 @@ async function assertSingleMintEvent(
   owner,
   mintingFee
 ) {
-  const { logs } = await contract.mint(metadataBaseURI + idCounter, {
+  const tx = await contract.mint(metadataBaseURI + idCounter, {
     value: mintingFee,
-    from: owner,
   })
+  const receipt = await tx.wait()
 
-  expect(logs[0].event).to.equal('TransferSingle')
-  expect(logs[0].args.id.toNumber()).to.equal(idCounter)
-  expect(logs[1].event).to.equal('URI')
-  expect(logs[1].args.id.toNumber()).to.equal(idCounter)
-  expect(logs[1].args.value).to.equal(metadataBaseURI + idCounter)
+  expect(receipt.events[0].event).to.equal('TransferSingle')
+  expect(receipt.events[0].args.id.toNumber()).to.equal(idCounter)
+  expect(receipt.events[1].event).to.equal('URI')
+  expect(receipt.events[1].args.id.toNumber()).to.equal(idCounter)
+  expect(receipt.events[1].args.value).to.equal(metadataBaseURI + idCounter)
 }
 
 async function assertMintBatchEvent({
@@ -44,9 +47,9 @@ async function assertMintBatchEvent({
   const metadataURIs = genBatchMetadataURIs(startingId, mintAmount)
   const tx = await contract.mintBatch(mintAmount, metadataURIs, {
     value: calculateFee(fee, mintAmount),
-    from: to,
   })
-  const ev = tx.logs[mintAmount].args
+  const receipt = await tx.wait()
+  const ev = receipt.events[mintAmount].args
 
   expect(ev.to).to.equal(to, 'to address should be set to the sender')
   expect(ev.from).to.equal(
@@ -68,13 +71,16 @@ async function assertMintBatchEvent({
 }
 
 async function assertPayFee(contract, payer) {
-  const { logs } = await contract.imageGenerationPayment(toWei('0.5'), {
-    value: toWei('0.5'),
-    from: payer,
-  })
+  const tx = await contract.imageGenerationPayment(
+    ethers.utils.parseEther('0.5'),
+    {
+      value: ethers.utils.parseEther('0.5'),
+    }
+  )
+  const receipt = await tx.wait()
 
-  expect(logs[0].event).to.equal('PayFee')
-  expect(logs[0].args.sender).to.equal(payer)
+  expect(receipt.events[0].event).to.equal('PayFee')
+  expect(receipt.events[0].args.sender).to.equal(payer)
 }
 
 module.exports = {
