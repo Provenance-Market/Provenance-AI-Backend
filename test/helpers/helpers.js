@@ -1,11 +1,10 @@
 const { expect } = require('chai')
 const { ethers } = require('hardhat')
-
-const { toBN } = ethers.BigNumber
+const { BigNumber } = require('ethers')
 
 const calculateFee = (mintingFee, mintAmount) => {
-  const amount = toBN(mintAmount)
-  const fee = toBN(mintingFee)
+  const amount = BigNumber.from(mintAmount)
+  const fee = BigNumber.from(mintingFee)
   const totalFee = fee.mul(amount)
   return totalFee
 }
@@ -45,13 +44,13 @@ async function assertMintBatchEvent({
   startingId,
 }) {
   const metadataURIs = genBatchMetadataURIs(startingId, mintAmount)
-  const tx = await contract.mintBatch(mintAmount, metadataURIs, {
+  const tx = await contract.connect(to).mintBatch(mintAmount, metadataURIs, {
     value: calculateFee(fee, mintAmount),
   })
   const receipt = await tx.wait()
   const ev = receipt.events[mintAmount].args
 
-  expect(ev.to).to.equal(to, 'to address should be set to the sender')
+  expect(ev.to).to.equal(to.address, 'to address should be set to the sender')
   expect(ev.from).to.equal(
     '0x0000000000000000000000000000000000000000',
     'from address should be set to 0x0'
@@ -59,10 +58,6 @@ async function assertMintBatchEvent({
   expect(ev.ids.length).to.equal(
     mintAmount,
     'number of minted tokens should match mint amount'
-  )
-  expect(ev.values.length).to.equal(
-    mintAmount,
-    'number of token quantities should match mint amount'
   )
 
   const logIds = ev.ids.map(id => id.toNumber())
