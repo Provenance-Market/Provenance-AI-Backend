@@ -75,7 +75,7 @@ async function assertPayFee(contract, payer) {
   const receipt = await tx.wait()
 
   expect(receipt.events[0].event).to.equal('PayFee')
-  expect(receipt.events[0].args.sender).to.equal(payer)
+  expect(receipt.events[0].args.sender).to.equal(payer.address)
 }
 
 module.exports = {

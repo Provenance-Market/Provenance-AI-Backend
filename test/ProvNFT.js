@@ -330,6 +330,37 @@ describe('ProvNFT', () => {
             value: calculateFee(mintingFee, mintAmount),
           })
         ).to.be.revertedWith('Pausable: paused')
+        // unpause for next tests
+        await contract.connect(payee2).unpause()
+      })
+    })
+  })
+
+  describe('Image Generation', () => {
+    describe('Success', () => {
+      it('should pay the AI image generation costs', async function () {
+        await assertPayFee(contract, owner)
+      })
+    })
+
+    describe('Failure', () => {
+      it('should revert for insufficient payment amount', async function () {
+        await expect(
+          contract.connect(owner).imageGenerationPayment(toWei('0.5'), {
+            value: toWei('0.4'),
+          })
+        ).to.be.revertedWith(
+          'Insufficient payment amount for AI image generation'
+        )
+      })
+
+      it('should revert when contract is paused', async function () {
+        await contract.connect(payee2).pause()
+        await expect(
+          contract.connect(payee2).imageGenerationPayment(toWei('0.5'), {
+            value: toWei('0.5'),
+          })
+        ).to.be.revertedWith('Pausable: paused')
       })
     })
   })
