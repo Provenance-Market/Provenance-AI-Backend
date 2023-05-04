@@ -124,7 +124,7 @@ node scripts/withdrawFunds.js <payee_wallet_address>
 
 ## Authors
 
-👤 [**Eddie**](https://github.com/Ed-Marcavage), [**AJ**](https://github.com/aaronjan98), [**Jake**](https://github.com/Rohith09)
+👤 [**Eddie**](https://github.com/Ed-Marcavage), [**AJ**](https://github.com/aaronjan98), [**Jake**](https://github.com/masonjake), [**Rohith**](https://github.com/Rohith09)
 
 ## 🤝 Contributing
 
