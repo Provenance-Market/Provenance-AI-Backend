@@ -119,7 +119,7 @@ node scripts/saveABI.js
 ## Withdraw Payee Share of Funds
 
 ```sh
-node scripts/withdrawFunds.js <payee_wallet_address>
+node scripts/withdrawFunds.js <contract_address> <payee_wallet_address>
 ```
 
 ## Authors
