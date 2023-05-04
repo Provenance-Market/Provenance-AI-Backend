@@ -19,7 +19,7 @@ contract ProvNFT is
     Counters.Counter private _tokenIds;
 
     uint8 constant SUPPLY_PER_ID = 1;
-    uint256 public mintPrice = 0.001 ether;
+    uint256 public mintPrice;
     address[] public owners;
 
     event NFTMinted(
@@ -32,9 +32,11 @@ contract ProvNFT is
 
     constructor(
         address[] memory _payees,
-        uint256[] memory _shares
+        uint256[] memory _shares,
+        uint256 _mintFee
     ) ERC1155('') PaymentSplitter(_payees, _shares) {
         owners = _payees;
+        mintPrice = _mintFee;
     }
 
     modifier onlyOwners() {

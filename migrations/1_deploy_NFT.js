@@ -1,4 +1,5 @@
 const NFT = artifacts.require('ProvNFT')
+const { toWei } = require('web3-utils')
 
 const payeeWallets = [
   '0xAB80b7719B06aeD5B3814dbaf54DfdF75B26ab78',
@@ -13,5 +14,10 @@ function splitSharesEvenly() {
 }
 
 module.exports = function (deployer) {
-  deployer.deploy(NFT, payeeWallets, splitSharesEvenly())
+  deployer.deploy(
+    NFT,
+    payeeWallets,
+    splitSharesEvenly(),
+    toWei('0.001', 'ether')
+  )
 }
