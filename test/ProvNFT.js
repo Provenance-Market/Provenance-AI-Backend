@@ -27,7 +27,7 @@ contract('ProvNFT', accounts => {
       assert(provNFT.address !== '')
     })
 
-    it('should have mintPrice equal to 0.01 ether', async function () {
+    it('should set minting fee', async function () {
       this.contract = await ProvNFT.new([owner], [1], mintingFee, {
         from: owner,
       })
@@ -36,7 +36,7 @@ contract('ProvNFT', accounts => {
       assert.equal(
         actualMintPrice,
         mintingFee,
-        'mintPrice is not equal to 0.01 ether'
+        'mint fee is not set to the proper ether amount'
       )
     })
   })
@@ -129,6 +129,14 @@ contract('ProvNFT', accounts => {
         const totalSupply = await this.contract.getTotalSupply()
         expect(totalSupply.toNumber()).to.equal(4)
       })
+
+      it('should update the minting fee', async function () {
+        const newMintFee = toWei('0.005')
+        await this.contract.setMintFee(newMintFee, { from: payee1 })
+        const actualMintPrice = await this.contract.mintPrice()
+
+        assert.equal(newMintFee, actualMintPrice, 'mintFee has not been reset')
+      })
     })
 
     describe('Failure', async function () {
@@ -169,6 +177,14 @@ contract('ProvNFT', accounts => {
             value: toWei('0.001'),
           }),
           'Pausable: paused'
+        )
+      })
+
+      it('should not update the minting fee for non-owners', async function () {
+        const newMintFee = toWei('0.005')
+        await truffleAssert.reverts(
+          this.contract.setMintFee(newMintFee, { from: accounts[3] }),
+          'revert Caller has to be an owner'
         )
       })
     })

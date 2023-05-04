@@ -42,8 +42,8 @@ contract ProvNFT is
     modifier onlyOwners() {
         bool isOwner = false;
         uint256 numOwners = owners.length;
-        for (uint256 p = 0; p < numOwners; p++) {
-            if (msg.sender == owners[p]) {
+        for (uint256 addy = 0; addy < numOwners; addy++) {
+            if (msg.sender == owners[addy]) {
                 isOwner = true;
                 break;
             }
@@ -110,6 +110,12 @@ contract ProvNFT is
 
     function getTotalSupply() public view returns (uint256) {
         return _tokenIds.current();
+    }
+
+    // Only Owners functions
+
+    function setMintFee(uint256 _newMintFee) public onlyOwners {
+        mintPrice = _newMintFee;
     }
 
     function pause() public onlyOwners {
