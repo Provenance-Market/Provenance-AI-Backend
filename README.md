@@ -122,6 +122,12 @@ node scripts/saveABI.js
 node scripts/withdrawFunds.js <contract_address> <payee_wallet_address>
 ```
 
+## Reset the Minting Fee
+
+```sh
+node scripts/setMintFee.js <contract_address> <wallet_address> <new_mint_fee_in_wei>
+```
+
 ## Authors
 
 👤 [**Eddie**](https://github.com/Ed-Marcavage), [**AJ**](https://github.com/aaronjan98), [**Jake**](https://github.com/masonjake), [**Rohith**](https://github.com/Rohith09)
