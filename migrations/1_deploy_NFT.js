@@ -14,10 +14,5 @@ function splitSharesEvenly() {
 }
 
 module.exports = function (deployer) {
-  deployer.deploy(
-    NFT,
-    payeeWallets,
-    splitSharesEvenly(),
-    toWei('0.001', 'ether')
-  )
+  deployer.deploy(NFT, payeeWallets, splitSharesEvenly(), toWei('0', 'ether'))
 }
