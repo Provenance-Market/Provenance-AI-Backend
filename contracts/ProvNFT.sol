@@ -8,7 +8,7 @@ import '@openzeppelin/contracts/utils/Counters.sol';
 import '@openzeppelin/contracts/finance/PaymentSplitter.sol';
 import '@ganache/console.log/console.sol';
 
-/// @custom:security-contact ProvenanceMarket.art@proton.me
+/// @custom:security-contact contact@prov.ai
 contract ProvNFT is
     ERC1155URIStorage,
     ERC1155Supply,

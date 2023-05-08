@@ -14,7 +14,7 @@
 ## Links
 
 🏠 [Live Site Homepage](https://app.prov.ai) \
-✨ [Contract Deployed on Polygon](https://mumbai.polygonscan.com/address/0xe6e275228f51b0bef9b79747f44b329970fef483) \
+✨ [Contract Deployed on Polygon](https://polygonscan.com/address/0xe6e275228f51b0bef9b79747f44b329970fef483) \
 📄 [Front End Repo](https://github.com/Provenance-Market/Provenace-AI-Frontend)
 
 ## Install
@@ -82,7 +82,7 @@ npx truffle deploy --network goerli --reset
 4. Verify Contract
 
 ```sh
-npx truffle run verify ProvNFT --network goerli
+npx truffle run verify ProvNFT@{ContractAddress} --network goerli --debug
 ```
 
 ## Run Project Locally
