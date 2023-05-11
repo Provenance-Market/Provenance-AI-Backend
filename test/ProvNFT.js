@@ -13,24 +13,48 @@ const {
 } = require('./helpers/helpers.js')
 
 contract('ProvNFT', accounts => {
+  const name = 'Provenance'
+  const symbol = 'PROV'
   const metadataBaseURI = 'https://example.com/token_metadata/'
   const [owner, payee1, payee2] = accounts
   const mintingFee = toWei('0.001')
 
   describe('Deployment', () => {
-    it('should deploy smart contract properly', async () => {
-      const provNFT = await ProvNFT.deployed(
+    beforeEach(async function () {
+      provNFT = await ProvNFT.deployed(
+        name,
+        symbol,
         [owner, payee1, payee2],
         [1, 1, 1],
         mintingFee
       )
+    })
+
+    it('should deploy smart contract properly', async () => {
       assert(provNFT.address !== '')
     })
 
+    it('has correct name', async function () {
+      const tokenName = await provNFT.name()
+      assert.equal(tokenName, name, 'Token name does not match')
+    })
+
+    it('has correct symbol', async function () {
+      const tokenSymbol = await provNFT.symbol()
+      assert.equal(tokenSymbol, symbol, 'Token symbol does not match')
+    })
+
     it('should set minting fee', async function () {
-      this.contract = await ProvNFT.new([owner], [1], mintingFee, {
-        from: owner,
-      })
+      this.contract = await ProvNFT.new(
+        name,
+        symbol,
+        [owner],
+        [1],
+        mintingFee,
+        {
+          from: owner,
+        }
+      )
       const actualMintPrice = await this.contract.mintPrice()
 
       assert.equal(
@@ -48,6 +72,8 @@ contract('ProvNFT', accounts => {
     describe('Success', async () => {
       before(async function () {
         this.contract = await ProvNFT.new(
+          name,
+          symbol,
           [payee1, payee2],
           [1, 1],
           mintingFee,
@@ -142,6 +168,8 @@ contract('ProvNFT', accounts => {
     describe('Failure', async function () {
       before(async function () {
         this.contract = await ProvNFT.new(
+          name,
+          symbol,
           [owner, payee1, payee2],
           [1, 1, 1],
           mintingFee,
@@ -196,6 +224,8 @@ contract('ProvNFT', accounts => {
     describe('Success', async function () {
       before(async function () {
         this.contract = await ProvNFT.new(
+          name,
+          symbol,
           [payee1, payee2],
           [1, 1],
           mintingFee,
@@ -353,6 +383,8 @@ contract('ProvNFT', accounts => {
     describe('Failure', async () => {
       before(async function () {
         this.contract = await ProvNFT.new(
+          name,
+          symbol,
           [payee1, payee2],
           [1, 1],
           mintingFee,
@@ -424,9 +456,16 @@ contract('ProvNFT', accounts => {
   describe('Image Generation', () => {
     describe('Success', async () => {
       it('should pay the AI image generation costs', async function () {
-        this.contract = await ProvNFT.new([owner], [1], mintingFee, {
-          from: owner,
-        })
+        this.contract = await ProvNFT.new(
+          name,
+          symbol,
+          [owner],
+          [1],
+          mintingFee,
+          {
+            from: owner,
+          }
+        )
         await assertPayFee(this.contract, owner)
       })
     })
@@ -434,6 +473,8 @@ contract('ProvNFT', accounts => {
     describe('Failure', async () => {
       before(async function () {
         this.contract = await ProvNFT.new(
+          name,
+          symbol,
           [owner, payee1, payee2],
           [1, 1, 1],
           mintingFee,
