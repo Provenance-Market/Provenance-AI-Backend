@@ -51,6 +51,7 @@ npx truffle test
 MNEMONIC="12 word seed phrase or secret/private key"
 INFURA_PROJECT_SECRET="used for goerli"
 ALCHEMY_API_KEY="used for mumbai"
+ALCHEMY_API_KEY_POLY="used for polygon mainnet"
 ETHERSCAN_API_KEY="used to verify contract"
 POLYGONSCAN_API_KEY="used to verify contract"
 ALCHEMY_SEPOLIA_API_KEY="alternative to goerli"
