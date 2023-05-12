@@ -1,4 +1,3 @@
-const axios = require('axios')
 const NFT = artifacts.require('ProvNFT')
 const { toWei } = require('web3-utils')
 
@@ -16,35 +15,18 @@ function splitSharesEvenly() {
   return sharesArray
 }
 
-module.exports = async function (deployer, network) {
-  let gasPrice
+module.exports = function (deployer) {
+  // Set the desired gas price (in wei)
+  const gasPrice = 350002998128
+  const dryRun = true
 
-  // Fetch gas price for current network
-  if (network === 'mumbai') {
-    const response = await axios.get('https://gasstation-mumbai.matic.today')
-    gasPrice = response.data.standard
-  } else if (network === 'polygon') {
-    const response = await axios.get('https://gasstation-mainnet.matic.network')
-    gasPrice = response.data.standard
-  } else if (network === 'test' || network === 'ganache') {
-    gasPrice = '1000000000'
-  } else {
-    throw new Error(`Unsupported network: ${network}`)
-  }
-
-  console.log('Gas Price: ', gasPrice)
-
-  try {
-    await deployer.deploy(
-      NFT,
-      name,
-      symbol,
-      payeeWallets,
-      splitSharesEvenly(),
-      toWei('0.01', 'ether'),
-      { gasPrice, skipDryRun: true }
-    )
-  } catch (error) {
-    console.error('Error deploying contract:', error)
-  }
+  deployer.deploy(
+    NFT,
+    name,
+    symbol,
+    payeeWallets,
+    splitSharesEvenly(),
+    toWei('0.01', 'ether'),
+    { gasPrice, dryRun }
+  )
 }
