@@ -16,12 +16,19 @@ function splitSharesEvenly() {
 }
 
 module.exports = function (deployer) {
+  // Set the desired gas price (in wei)
+  // const gasPrice = 350002998128
+  // Retrieve the current gas price from the Ethereum network
+  const gasPrice = await web3.eth.getGasPrice();
+  const dryRun = true
+
   deployer.deploy(
     NFT,
     name,
     symbol,
     payeeWallets,
     splitSharesEvenly(),
-    toWei('0.01', 'ether')
+    toWei('0.01', 'ether'),
+    { gasPrice, dryRun }
   )
 }
