@@ -49,12 +49,9 @@ npx truffle test
 
 ```.env
 MNEMONIC="12 word seed phrase or secret/private key"
-INFURA_PROJECT_SECRET="used for goerli"
-ALCHEMY_API_KEY="used for mumbai"
-ALCHEMY_API_KEY_POLY="used for polygon mainnet"
-ETHERSCAN_API_KEY="used to verify contract"
-POLYGONSCAN_API_KEY="used to verify contract"
-ALCHEMY_SEPOLIA_API_KEY="alternative to goerli"
+ALCHEMY_API_KEY_MUMBAI="polygon testnet api key"
+ALCHEMY_API_KEY_POLY="polygon mainnet api key"
+POLYGONSCAN_API_KEY="polygonscan key to verify contract"
 ```
 
 2. Just in case you need to flatten your contract
@@ -71,19 +68,19 @@ npx truffle-flattener ProvNFT.sol > flatten/ProvNFT_flat.sol
 - Command for deploying with all your migration scripts
 
 ```sh
-npx truffle migrate --network goerli
+npx truffle migrate --network mumbai
 ```
 
 - Or compile & deploy contract from scratch
 
 ```sh
-npx truffle deploy --network goerli --reset
+npx truffle deploy --network mumbai --reset
 ```
 
 4. Verify Contract
 
 ```sh
-npx truffle run verify ProvNFT@{ContractAddress} --network goerli --debug
+npx truffle run verify ProvNFT@{ContractAddress} --network mumbai --debug
 ```
 
 ## Run Project Locally
