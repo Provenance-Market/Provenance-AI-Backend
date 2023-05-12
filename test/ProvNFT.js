@@ -14,7 +14,7 @@ const {
 
 contract('ProvNFT', accounts => {
   const name = 'Provenance'
-  const symbol = 'PROV'
+  const symbol = 'PRV'
   const metadataBaseURI = 'https://example.com/token_metadata/'
   const [owner, payee1, payee2] = accounts
   const mintingFee = toWei('0.001')
