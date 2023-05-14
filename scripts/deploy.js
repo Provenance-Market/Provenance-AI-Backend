@@ -1,3 +1,5 @@
+const { toWei } = require('../test/helpers/tokens.js')
+
 const name = 'Provenance'
 const symbol = 'PRV'
 const payeeWallets = [
@@ -13,8 +15,18 @@ function splitSharesEvenly() {
 }
 
 async function main() {
+  // Set the desired gas price (in wei)
+  const gasPrice = 350002998128
+
   const NFT = await ethers.getContractFactory('ProvNFT')
-  let nft = await NFT.deploy(NAME, SYMBOL, fee)
+  let nft = await NFT.deploy(
+    name,
+    symbol,
+    payeeWallets,
+    splitSharesEvenly(),
+    toWei('0.01', 'ether'),
+    { gasPrice }
+  )
 
   await nft.deployed()
   console.log(`\nNFT deployed to: ${ethers.utils.getAddress(nft.address)}\n`)
