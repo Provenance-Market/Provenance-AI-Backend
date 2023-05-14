@@ -17,10 +17,10 @@ describe('ProvNFT', () => {
   const metadataBaseURI = 'https://example.com/token_metadata/'
   let owner, payee1, payee2
   let provNFT, contract
-  const mintingFee = toWei('0.001')
+  let mintingFee = toWei('0.001')
 
   before(async () => {
-    ;[owner, payee1, payee2] = await ethers.getSigners()
+    ;[owner, payee1, payee2, account3] = await ethers.getSigners()
     provNFT = await ethers.getContractFactory('ProvNFT')
     contract = await provNFT.deploy(
       name,
@@ -44,12 +44,12 @@ describe('ProvNFT', () => {
       expect(await contract.symbol()).to.equal('PRV')
     })
 
-    it('should have mintPrice equal to 0.001 ether', async function () {
+    it('should set minting fee', async function () {
       const actualMintPrice = await contract.mintPrice()
 
       expect(actualMintPrice).to.equal(
-        toWei('0.001'),
-        'mintPrice is not equal to 0.001 ether'
+        mintingFee,
+        'mint fee is not set to the proper ether amount'
       )
     })
   })
@@ -61,7 +61,7 @@ describe('ProvNFT', () => {
     describe('Success', async () => {
       before(async () => {
         transaction = await contract.mint(metadataBaseURI + ++idCounter, {
-          value: toWei('0.001'),
+          value: mintingFee,
           from: owner.address,
         })
         result = await transaction.wait()
@@ -98,7 +98,7 @@ describe('ProvNFT', () => {
           metadataBaseURI,
           ++idCounter,
           owner.address,
-          toWei('0.001')
+          mintingFee
         )
       })
 
@@ -108,7 +108,7 @@ describe('ProvNFT', () => {
           metadataBaseURI,
           ++idCounter,
           payee1.address,
-          toWei('0.001')
+          mintingFee
         )
       })
 
@@ -131,6 +131,18 @@ describe('ProvNFT', () => {
         const totalSupply = await contract.getTotalSupply()
         expect(totalSupply.toNumber()).to.equal(4)
       })
+
+      it('should update the minting fee', async function () {
+        const newMintFee = toWei('0.005')
+        mintingFee = newMintFee
+        await contract.connect(payee1).setMintFee(newMintFee)
+        const actualMintPrice = await contract.mintPrice()
+
+        expect(newMintFee).to.equal(
+          actualMintPrice,
+          'mintFee has not been reset'
+        )
+      })
     })
 
     describe('Failure', async function () {
@@ -151,6 +163,14 @@ describe('ProvNFT', () => {
         ).to.be.revertedWith('Pausable: paused')
         // unpause for batch minting
         await contract.connect(payee1).unpause()
+      })
+
+      it('should not update the minting fee for non-owners', async function () {
+        const newMintFee = toWei('0.5')
+        await expect(
+          contract.connect(account3).setMintFee(newMintFee),
+          'revert Caller has to be an owner'
+        ).to.be.reverted
       })
     })
   })
