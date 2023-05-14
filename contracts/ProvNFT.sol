@@ -7,7 +7,7 @@ import '@openzeppelin/contracts/security/Pausable.sol';
 import '@openzeppelin/contracts/utils/Counters.sol';
 import '@openzeppelin/contracts/finance/PaymentSplitter.sol';
 
-/// @custom:security-contact ProvenanceMarket.art@proton.me
+/// @custom:security-contact contact@prov.ai
 contract ProvNFT is
     ERC1155URIStorage,
     ERC1155Supply,
@@ -18,8 +18,10 @@ contract ProvNFT is
     Counters.Counter private _tokenIds;
 
     uint8 constant SUPPLY_PER_ID = 1;
-    uint256 public mintPrice = 0.001 ether;
-    address[] public pausers;
+    string public name;
+    string public symbol;
+    uint256 public mintPrice;
+    address[] public owners;
 
     event NFTMinted(
         address indexed owner,
@@ -30,22 +32,28 @@ contract ProvNFT is
     event PayFee(address indexed sender);
 
     constructor(
+        string memory _name,
+        string memory _symbol,
         address[] memory _payees,
-        uint256[] memory _shares
+        uint256[] memory _shares,
+        uint256 _mintFee
     ) ERC1155('') PaymentSplitter(_payees, _shares) {
-        pausers = _payees;
+        name = _name;
+        symbol = _symbol;
+        owners = _payees;
+        mintPrice = _mintFee;
     }
 
-    modifier onlyPauser() {
-        bool isPauser = false;
-        uint256 numPausers = pausers.length;
-        for (uint256 p = 0; p < numPausers; p++) {
-            if (msg.sender == pausers[p]) {
-                isPauser = true;
+    modifier onlyOwners() {
+        bool isOwner = false;
+        uint256 numOwners = owners.length;
+        for (uint256 addy = 0; addy < numOwners; addy++) {
+            if (msg.sender == owners[addy]) {
+                isOwner = true;
                 break;
             }
         }
-        require(isPauser, 'Caller has to be a pauser');
+        require(isOwner, 'Caller has to be an owner');
         _;
     }
 
@@ -109,11 +117,17 @@ contract ProvNFT is
         return _tokenIds.current();
     }
 
-    function pause() public onlyPauser {
+    // Only Owners functions
+
+    function setMintFee(uint256 _newMintFee) public onlyOwners {
+        mintPrice = _newMintFee;
+    }
+
+    function pause() public onlyOwners {
         _pause();
     }
 
-    function unpause() public onlyPauser {
+    function unpause() public onlyOwners {
         _unpause();
     }
 

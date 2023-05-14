@@ -12,6 +12,8 @@ const {
 } = require('./helpers/helpers.js')
 
 describe('ProvNFT', () => {
+  const name = 'Provenance'
+  const symbol = 'PRV'
   const metadataBaseURI = 'https://example.com/token_metadata/'
   let owner, payee1, payee2
   let provNFT, contract
@@ -21,14 +23,25 @@ describe('ProvNFT', () => {
     ;[owner, payee1, payee2] = await ethers.getSigners()
     provNFT = await ethers.getContractFactory('ProvNFT')
     contract = await provNFT.deploy(
+      name,
+      symbol,
       [owner.address, payee1.address, payee2.address],
-      [1, 1, 1]
+      [1, 1, 1],
+      mintingFee
     )
   })
 
   describe('Deployment', () => {
     it('should deploy smart contract properly', async () => {
       expect(contract.address).to.not.be.null
+    })
+
+    it('has correct name', async () => {
+      expect(await contract.name()).to.equal('Provenance')
+    })
+
+    it('has correct symbol', async () => {
+      expect(await contract.symbol()).to.equal('PRV')
     })
 
     it('should have mintPrice equal to 0.001 ether', async function () {
