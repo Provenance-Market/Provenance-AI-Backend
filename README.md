@@ -14,8 +14,7 @@
 ## Links
 
 🏠 [Live Site Homepage](https://app.prov.ai) \
-✨ [Contract Deployed on Polygon](https://polygonscan.com/address/0xe6e275228f51b0bef9b79747f44b329970fef483) \
-📄 [Front End Repo](https://github.com/Provenance-Market/Provenace-AI-Frontend)
+✨ [Contract Deployed on Polygon](https://polygonscan.com/address/0x7d2226Dc01B91471A37BD790e3E37b2d20E76E41)
 
 ## Install
 
