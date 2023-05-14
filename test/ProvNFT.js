@@ -250,29 +250,30 @@ describe('ProvNFT', () => {
         const totalShares = await contract.totalShares()
 
         // Get the balances of payee1 & payee2 in the contract before the minting operation
-        const balanceBeforeMint1 = await contract
-          .connect(payee1)
-          .releasable(payee1.address)
-        const balanceBeforeMint2 = await contract
-          .connect(payee2)
-          .releasable(payee2.address)
+        const balanceBeforeMint1 = await contract['releasable(address)'](
+          payee1.address
+        )
+
+        const balanceBeforeMint2 = await contract['releasable(address)'](
+          payee2.address
+        )
 
         // Mint new tokens
         await assertMintBatchEvent({
           contract,
-          to: owner.address,
+          to: owner,
           fee: mintingFee,
           mintAmount,
           startingId: firstEmptyId,
         })
 
         // Get the balances of payee1 & payee2 in the contract after the minting operation
-        const balanceAfterMint1 = await contract
-          .connect(payee1)
-          .releasable(payee1.address)
-        const balanceAfterMint2 = await contract
-          .connect(payee2)
-          .releasable(payee2.address)
+        const balanceAfterMint1 = await contract['releasable(address)'](
+          payee1.address
+        )
+        const balanceAfterMint2 = await contract['releasable(address)'](
+          payee2.address
+        )
 
         // Get the balances of payee1 and payee2 on the contract after the minting operation
         const payee1Shares = await contract.shares(payee1.address)
